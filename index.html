@@ -1,0 +1,2145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="A Greek-myth adventure game for ages 9-15. Win the favor of ten gods and stop the Hydra, the Chimera and Typhon in 45 days.">
+<style>body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Favor of Olympus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus+SC&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap">
+<style>
+/* Layout: night sky over Olympus — a single dark world. Hub = hero strip, pantheon board + quest board side by side; quests run in a centered "scroll" stage. */
+:root{
+  --night:#0d1524; --lapis:#182641; --lapis-2:#22355b; --line:#33497a;
+  --gold:#e3b14b; --gold-soft:#b78f3e; --marble:#f2ece0; --mist:#a7b6cf;
+  --clay:#e0673f; --olive:#97bb6a;
+  --display:"Marcellus SC","Trajan Pro","Palatino Linotype",Georgia,serif;
+  --body:"Alegreya Sans","Gill Sans","Trebuchet MS",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{
+  background:var(--night); color:var(--marble); font-family:var(--body); font-size:17px; line-height:1.5;
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, #ffffffaa 50%, transparent 51%),
+    radial-gradient(1px 1px at 78% 9%, #ffffff88 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 44% 32%, #ffe9b0aa 50%, transparent 51%),
+    radial-gradient(1px 1px at 91% 41%, #ffffff77 50%, transparent 51%),
+    radial-gradient(1px 1px at 6% 62%, #ffffff66 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 63% 71%, #ffffff66 50%, transparent 51%),
+    radial-gradient(1px 1px at 28% 88%, #ffe9b088 50%, transparent 51%),
+    radial-gradient(ellipse at 50% -20%, #22355b 0%, transparent 60%);
+  background-attachment:fixed;
+}
+.wrap{max-width:1100px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 48px}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;letter-spacing:.02em}
+p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:disabled{cursor:not-allowed;opacity:.42}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.meander{height:12px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M0 18H20M16 18V2H4V14H12V6H8V10' fill='none' stroke='%23e3b14b' stroke-width='2'/%3E%3C/svg%3E");background-size:12px 12px;background-repeat:repeat-x;opacity:.7}
+.label{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mist);font-weight:700}
+.muted{color:var(--mist)}
+
+/* top bar */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-block:6px 10px}
+.brand{font-family:var(--display);font-size:1.35rem;color:var(--gold)}
+.topbar .right{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.daychip{font-family:var(--display);color:var(--marble);font-size:1rem}
+
+/* buttons */
+.btn{border:1px solid var(--gold-soft);background:transparent;padding:9px 16px;border-radius:6px;color:var(--gold);font-weight:700;transition:background .15s}
+.btn:hover:not(:disabled){background:#e3b14b1f}
+.btn.primary{background:var(--gold);color:var(--night);border-color:var(--gold)}
+.btn.primary:hover:not(:disabled){background:#f0c464}
+.btn.small{padding:5px 10px;font-size:.88rem}
+.btn.ghost{border-color:var(--line);color:var(--mist)}
+
+/* panels */
+.panel{background:linear-gradient(180deg,var(--lapis),#141f37);border:1px solid var(--line);border-radius:10px;padding:16px}
+.section-title{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.section-title h2{font-size:1.3rem;color:var(--gold)}
+
+/* hero strip */
+.hero-strip{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,2fr);gap:18px;align-items:center;margin-block:10px 18px}
+.hero-name{font-family:var(--display);font-size:1.45rem}
+.bar{height:12px;border-radius:6px;background:#0a101c;border:1px solid var(--line);overflow:hidden}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,#7aa555,var(--olive));transition:width .4s}
+.bar.foe>i{background:linear-gradient(90deg,#b54a2c,var(--clay))}
+.bar.low>i{background:linear-gradient(90deg,#b54a2c,var(--clay))}
+.stats{display:flex;flex-wrap:wrap;gap:8px}
+.stat{background:#0e172a;border:1px solid var(--line);border-radius:8px;padding:6px 10px;min-width:74px}
+.stat b{display:block;font-family:var(--display);font-size:1.25rem;color:var(--marble);font-variant-numeric:tabular-nums;font-weight:400}
+.stat span{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mist)}
+.stat.gold b{color:var(--gold)}
+.gear{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:.8rem;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--mist)}
+.tag.on{border-color:var(--gold-soft);color:var(--gold)}
+
+/* hub */
+.hub{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:18px;align-items:start}
+.gods{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px}
+.god{border:1px solid var(--line);border-radius:9px;padding:11px;background:#0f1930;display:flex;flex-direction:column;gap:6px;position:relative}
+.god.ready{border-color:var(--gc)}
+.god.wrath{border-color:var(--clay);box-shadow:0 0 0 1px var(--clay) inset}
+.god-head{display:flex;gap:9px;align-items:center}
+.god-icon{width:34px;height:34px;flex:none;color:var(--gc);border:1px solid var(--gc);border-radius:50%;display:grid;place-items:center}
+.god-icon svg{width:20px;height:20px}
+.god-name{font-family:var(--display);font-size:1.08rem;line-height:1.1}
+.god-title{font-size:.78rem;color:var(--mist)}
+.pips{display:flex;gap:4px}
+.pip{width:15px;height:15px;transform:rotate(45deg);border:1px solid var(--gc);border-radius:2px}
+.pip.on{background:var(--gc)}
+.mood{font-size:.82rem;color:var(--mist)}
+.mood.hot{color:var(--clay);font-weight:700}
+.mood.good{color:var(--gc);font-weight:700}
+.power{font-size:.8rem;color:var(--mist);border-top:1px dashed var(--line);padding-top:6px}
+.power b{color:var(--marble)}
+.quests{display:flex;flex-direction:column;gap:12px}
+.qcard{border:1px solid var(--line);border-radius:9px;padding:14px;background:#0f1930;display:flex;flex-direction:column;gap:8px}
+.qcard.final{border-color:var(--gold);background:linear-gradient(180deg,#2a2412,#0f1930)}
+.qcard h3{font-size:1.2rem}
+.qmeta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center}
+.stars{color:var(--gold);letter-spacing:2px}
+.rivals{display:flex;align-items:center;gap:6px;font-size:.88rem;color:var(--mist);flex-wrap:wrap}
+.mini{display:inline-flex;align-items:center;gap:4px;color:var(--gc);font-weight:700}
+.mini svg{width:15px;height:15px}
+.market{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.item{border:1px solid var(--line);border-radius:9px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;background:#0f1930}
+.item-top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.price{color:var(--gold);font-variant-numeric:tabular-nums;white-space:nowrap}
+.note{border:1px solid var(--clay);background:#3a1a1255;border-radius:9px;padding:12px 14px;margin-bottom:14px;display:flex;flex-direction:column;gap:6px}
+.note.calm{border-color:var(--gold-soft);background:#2a241255}
+details.rules{margin-top:18px}
+details.rules summary{cursor:pointer;font-family:var(--display);color:var(--gold);font-size:1.1rem}
+details.rules ul{margin:10px 0 0;padding-left:20px;color:var(--mist);display:grid;gap:4px;max-width:70ch}
+details.rules li b{color:var(--marble)}
+.col{display:flex;flex-direction:column;gap:18px;min-width:0}
+
+/* stage (quest) */
+.stage{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.qhead{text-align:center;display:flex;flex-direction:column;gap:4px;align-items:center}
+.qhead h2{font-size:1.9rem;color:var(--gold)}
+.step{display:flex;gap:6px;justify-content:center}
+.step i{width:30px;height:4px;border-radius:2px;background:var(--line)}
+.step i.on{background:var(--gold)}
+.story{font-size:1.12rem;max-width:62ch}
+.story.intro{color:var(--mist);font-style:italic}
+.choices{display:flex;flex-direction:column;gap:10px}
+.choice{display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:left;width:100%;background:#0f1930;border:1px solid var(--line);border-radius:9px;padding:13px 15px;transition:border-color .15s,transform .15s}
+.choice:hover:not(:disabled){border-color:var(--gold);transform:translateX(3px)}
+.choice .ctext{font-weight:500;min-width:0}
+.check{flex:none;font-size:.82rem;border-radius:999px;padding:3px 10px;border:1px solid var(--line);color:var(--mist);white-space:nowrap}
+.check.might{color:#f0a07f;border-color:#f0a07f66}
+.check.wit{color:#9fc6ff;border-color:#9fc6ff66}
+.check.grace{color:#b6e08f;border-color:#b6e08f66}
+.check.free{color:var(--gold);border-color:var(--gold-soft)}
+.bless{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:.9rem;color:var(--mist)}
+.blesschip{border:1px solid var(--gc);color:var(--gc);background:transparent;border-radius:999px;padding:4px 11px;display:inline-flex;gap:5px;align-items:center;font-weight:700;font-size:.85rem}
+.blesschip svg{width:14px;height:14px}
+.blesschip.sel{background:var(--gc);color:var(--night)}
+
+/* dice */
+.rollbox{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.dice{display:flex;gap:10px}
+.die{width:84px;height:84px;display:grid;place-items:center;clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);background:var(--gold);position:relative}
+.die::before{content:"";position:absolute;inset:3px;clip-path:inherit;background:linear-gradient(160deg,#2a3f69,#121c33)}
+.die span{position:relative;font-family:var(--display);font-size:2rem;color:var(--marble);font-variant-numeric:tabular-nums}
+.die.dim{opacity:.4}
+.die.spin{animation:spin .7s cubic-bezier(.2,.7,.3,1)}
+@keyframes spin{from{transform:rotate(-540deg) scale(.6)}to{transform:rotate(0) scale(1)}}
+.math{font-variant-numeric:tabular-nums;font-size:1.05rem}
+.verdict{font-family:var(--display);font-size:1.6rem}
+.verdict.ok{color:var(--olive)}
+.verdict.bad{color:var(--clay)}
+.reveal{display:flex;flex-direction:column;gap:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:.85rem;padding:3px 10px;border-radius:999px;border:1px solid var(--line)}
+.chip.good{color:var(--olive);border-color:#97bb6a77}
+.chip.bad{color:var(--clay);border-color:#e0673f77}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+
+/* combat */
+.arena{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+.fighter{display:flex;flex-direction:column;gap:8px}
+.fighter h3{font-size:1.35rem}
+.fighter.foe h3{color:var(--clay)}
+.shake{animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.hpnum{font-variant-numeric:tabular-nums;font-size:.9rem;color:var(--mist)}
+.moves{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.move{text-align:left;background:#0f1930;border:1px solid var(--line);border-radius:9px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.move:hover:not(:disabled){border-color:var(--gold)}
+.move b{font-family:var(--display);font-weight:400;font-size:1.05rem}
+.move small{color:var(--mist);font-size:.8rem;line-height:1.3}
+.move.godmove{border-color:var(--gc)}
+.move.godmove b{color:var(--gc)}
+.log{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px;font-size:.93rem}
+.log li{padding:6px 10px;border-left:3px solid var(--line);background:#0b1324;border-radius:0 6px 6px 0}
+.log li.you{border-color:var(--olive)}
+.log li.foe{border-color:var(--clay)}
+.log li.god{border-color:var(--gold);color:var(--gold)}
+.log li:first-child{font-weight:700}
+
+/* pick lists */
+.pickrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.pick{background:#0f1930;border:1px solid var(--line);border-radius:10px;padding:16px;text-align:left;display:flex;flex-direction:column;gap:8px}
+.pick:hover:not(:disabled){border-color:var(--gold)}
+.pick.sel{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
+.pick.godpick{border-color:var(--gc)}
+.pick h3{font-size:1.25rem}
+
+/* title */
+.title{text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;padding-block:28px 10px}
+.title h1{font-size:clamp(2.6rem,9vw,4.8rem);color:var(--gold);line-height:1}
+.title p{max-width:56ch;color:var(--mist);font-size:1.1rem}
+.field{display:flex;flex-direction:column;gap:6px;max-width:340px;width:100%;margin:0 auto}
+.field input{background:#0b1324;border:1px solid var(--line);border-radius:8px;padding:10px 12px;color:var(--marble);font:inherit}
+.statline{display:flex;gap:10px;font-size:.9rem;color:var(--mist);flex-wrap:wrap}
+.statline b{color:var(--marble)}
+.center{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.sky{width:100%;max-width:520px;height:auto}
+
+@media (max-width:820px){
+  .hub,.hero-strip,.arena{grid-template-columns:minmax(0,1fr)}
+  .die{width:70px;height:70px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.foes{font-size:.88rem;color:var(--clay);font-weight:700}
+.lore{border-left:3px solid var(--gold-soft);padding:6px 12px;margin-bottom:14px;color:var(--mist);font-style:italic;display:flex;flex-direction:column;gap:2px}
+.choice.unlocked{border-color:var(--gold-soft);background:linear-gradient(90deg,#2a2412,#0f1930)}
+.unlock{display:block;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:2px}
+.aidgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.tag.danger{border-color:#e0673f88;color:var(--clay)}
+.calendar{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.cal-top{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap}
+.cal-top .label{color:var(--gold)}
+.cal-day{font-family:var(--display);font-size:1.6rem;line-height:1.1}
+.cal-boss{color:var(--mist)}
+.cal-boss b{color:var(--marble);font-variant-numeric:tabular-nums}
+.cal-boss.soon{color:var(--clay);font-weight:700}
+.cells{display:grid;grid-template-columns:repeat(15,minmax(0,1fr));gap:4px}
+.cells i{height:16px;border-radius:3px;border:1px solid var(--line);background:#0b1324;font-style:normal;font-size:.7rem;display:grid;place-items:center;color:var(--night);font-weight:700}
+.cells i.past{background:var(--gold-soft);border-color:var(--gold-soft)}
+.cells i.today{background:var(--gold);border-color:var(--gold);box-shadow:0 0 0 2px #e3b14b55}
+.cells i.boss{border-color:var(--clay);background:#3a1a12;color:var(--clay)}
+.cells i.boss.today{background:var(--clay);color:var(--night)}
+.parts{display:flex;gap:6px;flex-wrap:wrap;font-size:.78rem}
+.parts span{color:var(--mist);border:1px solid var(--line);border-radius:999px;padding:1px 9px}
+.parts span.on{color:var(--gold);border-color:var(--gold-soft)}
+.parts span.done{text-decoration:line-through;opacity:.6}
+.qfoot{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.days{font-size:.85rem;color:var(--mist)}
+.days.late{color:var(--clay)}
+.trainrow{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tp{letter-spacing:1px;font-size:.7rem}
+select{background:#0b1324;color:var(--marble);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font:inherit;font-size:.9rem;max-width:100%}
+.perk{color:var(--gc);font-weight:700}
+.pick .god-head h3{margin-top:2px}
+.threat{font-size:.88rem;color:var(--marble);font-variant-numeric:tabular-nums}
+.savemsg{font-size:.9rem;color:var(--mist);text-align:center}
+.savebar{margin-top:32px;padding-top:20px;border-top:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:10px}
+.savebtn{width:100%;max-width:520px;background:var(--gold);color:var(--night);border:2px solid var(--gold);border-radius:10px;padding:16px 24px;font-family:var(--display);font-size:1.45rem;font-weight:700;letter-spacing:.06em;box-shadow:0 6px 20px #e3b14b33;transition:transform .12s,background .15s}
+.savebtn:hover{background:#f0c464;transform:translateY(-2px)}
+.savebtn:active{transform:translateY(0)}
+.savenote{font-size:.9rem!important;color:var(--mist)}
+.parts .arrow{border:none;color:var(--clay);padding:1px 0;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase}
+</style>
+
+<div class="wrap" id="app"></div>
+
+<script>
+/* ---------- gods ---------- */
+const ICON = {
+  zeus:'<svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 10-13h-7z" fill="currentColor"/></svg>',
+  poseidon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22V3M6 4v5a6 3 0 0 0 12 0V4M9 3l3-1 3 1"/></svg>',
+  athena:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4l3 4h8l3-4v12a7 6 0 0 1-14 0z"/><circle cx="9.5" cy="12" r="2"/><circle cx="14.5" cy="12" r="2"/></svg>',
+  artemis:'<svg viewBox="0 0 24 24"><path d="M14 2a10 10 0 1 0 8 14A8 8 0 1 1 14 2z" fill="currentColor"/></svg>',
+  ares:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 21v-9a7 7 0 0 1 14 0v9h-5v-7h-4v7z"/><path d="M12 5V1"/></svg>',
+  hades:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22V9M7 3v6h10V3"/></svg>',
+  hermes:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v18M4 6c3 0 5 1 8 4 3-3 5-4 8-4M6 9c2 0 4 1 6 3 2-2 4-3 6-3"/><circle cx="12" cy="3" r="1.3"/></svg>',
+  apollo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/></svg>',
+  hephaestus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h10v6H4zM9 11v11"/><path d="M14 7h6l-2 2h-4"/></svg>',
+  aphrodite:'<svg viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="currentColor"/></svg>'
+};
+const GODS = {
+  zeus:{name:"Zeus",title:"King of the Sky",c:"#f0c75a",power:"Thunderbolt",pdesc:"3d6 lightning damage.",
+    wrath:{t:"Zeus is angry! Lightning strikes your camp and burns 8 drachmae.",gold:-8},
+    aid:"Zeus strikes {B} with lightning: −8 HP."},
+  poseidon:{name:"Poseidon",title:"Lord of the Sea",c:"#5cc3cc",power:"Tidal Wave",pdesc:"2d6 damage and the enemy loses its next turn.",
+    wrath:{t:"Poseidon is angry! A storm washes away a jar of ambrosia and 4 drachmae.",ambrosia:-1,gold:-4},
+    aid:"Poseidon sends a crashing wave: −6 HP, and {B} loses its first turn."},
+  athena:{name:"Athena",title:"Goddess of Wisdom",c:"#c3cf8c",power:"Aegis",pdesc:"+3 Armor for the rest of this fight.",
+    wrath:{t:"Athena is angry! Your thoughts feel foggy: −2 on Wit rolls next quest.",witPen:2},
+    aid:"Athena lends you her Aegis: +2 Armor for the battle."},
+  artemis:{name:"Artemis",title:"Goddess of the Hunt",c:"#cdd7ec",power:"Silver Arrow",pdesc:"Never misses: 2d8+2 damage.",
+    wrath:{t:"Artemis is angry! Wolves follow your trail. You start the next quest with 5 less HP.",startHp:5},
+    aid:"Artemis fires a volley of silver arrows at {B}: −6 HP."},
+  ares:{name:"Ares",title:"God of War",c:"#ef5a5a",power:"Battle Fury",pdesc:"+3 damage on your attacks for the rest of this fight.",
+    wrath:{t:"Ares is angry! Your weapon feels heavy: −2 on attack rolls next quest.",atkPen:2},
+    aid:"Ares fills you with courage: +2 damage on every attack."},
+  hades:{name:"Hades",title:"Lord of the Underworld",c:"#a993e6",power:"Shadow Drain",pdesc:"Steal 2d6 life from the enemy and heal that much.",
+    wrath:{t:"Hades is angry! Ghosts cling to your arms: −2 on Might rolls next quest.",mightPen:2},
+    aid:"Hades promises: if you fall, he will send you back once."},
+  hermes:{name:"Hermes",title:"Messenger of the Gods",c:"#7fd1a8",power:"Quicksilver",pdesc:"Move so fast you Strike twice in one turn.",
+    wrath:{t:"Hermes is annoyed! Your coin purse mysteriously vanishes: −12 drachmae.",gold:-12},
+    aid:"Hermes zips in with two jars of ambrosia."},
+  apollo:{name:"Apollo",title:"God of Sun and Music",c:"#ff9f45",power:"Healing Sun",pdesc:"Warm sunlight heals 2d8+4 HP.",
+    wrath:{t:"Apollo is angry! You catch a sun-fever. You start the next quest with 5 less HP.",startHp:5},
+    aid:"Apollo's sunlight fills you: full HP plus 6 extra."},
+  hephaestus:{name:"Hephaestus",title:"God of the Forge",c:"#c98a57",power:"Molten Forge",pdesc:"2d6 fire damage and the enemy's Armor melts by 2.",
+    wrath:{t:"Hephaestus is angry! Your armor springs a crack: −2 Armor next quest.",acPen:2},
+    aid:"Hephaestus tosses you fresh-forged armor: +1 Armor and +1 damage."},
+  aphrodite:{name:"Aphrodite",title:"Goddess of Love",c:"#f29ac6",power:"Charm",pdesc:"The enemy is charmed: it loses its next turn and its attack drops by 2.",
+    wrath:{t:"Aphrodite is angry! You trip over everything: −2 on Grace rolls next quest.",gracePen:2},
+    aid:"Aphrodite charms {B}: its attack −2."}
+};
+const GOD_KEYS = Object.keys(GODS);
+
+const HEROES = {
+  lykos:{name:"Lykos",cls:"Shepherd of Arcadia",patron:"zeus",might:3,wit:1,grace:1,hp:28,ac:13,gold:20,ambrosia:1,
+    blurb:"Strong as an ox. Once wrestled a bear (it was a small bear).",perk:"Zeus starts at 3 favor."},
+  ione:{name:"Ione",cls:"Scholar of Athens",patron:"athena",might:1,wit:3,grace:1,hp:22,ac:12,gold:30,ambrosia:2,
+    blurb:"Has read every scroll in the library twice.",perk:"Athena starts at 3 favor. Extra ambrosia and drachmae."},
+  theron:{name:"Theron",cls:"Hunter of Sparta",patron:"artemis",might:1,wit:1,grace:3,hp:24,ac:14,gold:20,ambrosia:1,
+    blurb:"Quick and quiet. Never misses... usually.",perk:"Artemis starts at 3 favor."},
+  kyra:{name:"Kyra",cls:"Amazon Warrior",patron:"ares",might:3,wit:0,grace:2,hp:28,ac:14,gold:15,ambrosia:1,
+    blurb:"Rides a horse, throws a spear, fears nothing except boredom.",perk:"Ares starts at 3 favor. Toughest armor."},
+  nikias:{name:"Nikias",cls:"Sailor of Ithaca",patron:"poseidon",might:2,wit:2,grace:1,hp:25,ac:13,gold:35,ambrosia:1,
+    blurb:"Has sailed every sea and tells a story about each one.",perk:"Poseidon starts at 3 favor. Extra drachmae."},
+  dorian:{name:"Dorian",cls:"Smith of Corinth",patron:"hephaestus",might:2,wit:2,grace:0,hp:27,ac:13,gold:15,ambrosia:1,shield:true,
+    blurb:"Builds anything out of bronze. Talks to his hammer.",perk:"Hephaestus starts at 3 favor. Starts with a Bronze Shield."},
+  pip:{name:"Pip",cls:"Trickster of Mount Kyllene",patron:"hermes",might:0,wit:2,grace:3,hp:20,ac:13,gold:25,ambrosia:1,charm:true,
+    blurb:"Small, fast, and probably holding your wallet.",perk:"Hermes starts at 3 favor. Starts with an Olive Charm."},
+  melia:{name:"Melia",cls:"Healer of Delphi",patron:"apollo",might:1,wit:2,grace:2,hp:24,ac:12,gold:20,ambrosia:3,
+    blurb:"Grew up next to the Oracle. Always has a remedy handy.",perk:"Apollo starts at 3 favor. Starts with 3 ambrosia."},
+  thalia:{name:"Thalia",cls:"Singer of Cyprus",patron:"aphrodite",might:0,wit:2,grace:3,hp:21,ac:12,gold:30,ambrosia:2,
+    blurb:"Her songs can calm a storm, or start a dance party.",perk:"Aphrodite starts at 3 favor."},
+  orpha:{name:"Orpha",cls:"Gravekeeper of Thebes",patron:"hades",might:1,wit:3,grace:1,hp:24,ac:13,gold:20,ambrosia:1,
+    blurb:"Not afraid of ghosts. The ghosts are a bit afraid of her.",perk:"Hades starts at 3 favor."}
+};
+const STAT = {might:"Might",wit:"Wit",grace:"Grace"};
+
+/* ---------- quests ----------
+   nodes: scene {t, choices, next} | fight {fight, win, next} | aid {aid:true, next}
+   choice: {label, stat, dc, ok, fail} or {label, free:true, cost, ok}; any choice may have need:"flag"
+   outcome: {t, fx, set, setG, go} */
+const QUESTS = {
+ nemea:{title:"The Lion of Nemea",place:"Hills of Nemea",gods:["zeus","artemis"],tier:1,gold:20,len:5,start:"s1",
+  intro:"A golden lion stalks the hills of Nemea. Farmers say spears bounce off its hide like twigs.",
+  nodes:{
+   s1:{t:"Paw prints as big as dinner plates lead up into the hills. Night is falling.",next:"m",choices:[
+    {label:"Follow the tracks by moonlight",stat:"grace",dc:12,
+      ok:{t:"You move silently and spot the lion's cave from a distance.",fx:{favor:{artemis:1}}},
+      fail:{t:"A twig snaps. Something in the dark starts laughing. Jackals!",fx:{hp:-3}}},
+    {label:"Ask the shepherds what they know",stat:"wit",dc:11,
+      ok:{t:"An old shepherd whispers: 'The cave has two doors. Block one, or it will sneak around behind you.'",set:"shepherd",fx:{}},
+      fail:{t:"The shepherds only want to complain about their missing sheep.",fx:{}}},
+    {label:"Roar a challenge into the hills",stat:"might",dc:13,
+      ok:{t:"Your shout echoes like thunder. Zeus likes a bold hero.",fx:{favor:{zeus:1}}},
+      fail:{t:"Something roars back. Then something else giggles.",fx:{hp:-3}}}
+   ]},
+   m:{fight:{name:"Jackal Pack",ref:"the jackal pack",hp:11,ac:12,atk:3,dmg:[1,6,0],desc:"They follow the lion and eat its leftovers."},
+     win:{t:"The jackals scatter, yelping. One drops a pouch it stole from a farmer.",fx:{gold:6}},next:"s2"},
+   s2:{t:"At the lion's cave there are two ways in: a wide front door, and a narrow crack in the back.",next:"s3",choices:[
+    {label:"Block the back crack, then go in the front",free:true,need:"shepherd",
+      ok:{t:"Just like the shepherd said. Now it can't sneak around you.",fx:{boss:{atk:-2}}}},
+    {label:"Squeeze through the back crack",stat:"grace",dc:12,
+      ok:{t:"You pop out right behind the lion while it's napping. A free hit!",fx:{boss:{hp:-5}}},
+      fail:{t:"You get stuck halfway. Very embarrassing, and a bit scrapey.",fx:{hp:-3}}},
+    {label:"Rest by a spring before going in",free:true,
+      ok:{t:"Cool water and a few quiet minutes.",fx:{hp:6}}}
+   ]},
+   s3:{t:"Inside the cave you see it: the Nemean Lion, fur shining like bronze. Behind it, a tiny cub peeks out.",next:"b",choices:[
+    {label:"Aim for the soft spot in its mouth",stat:"grace",dc:14,
+      ok:{t:"The only place its hide can't protect! Your blow lands true.",fx:{boss:{hp:-6}}},
+      fail:{t:"You miss, and a huge paw knocks you over.",fx:{hp:-4}}},
+    {label:"Remember the old stories",stat:"wit",dc:12,
+      ok:{t:"Weapons can't cut its hide, but a strong grip can hold it. You plan to wrestle it.",fx:{boss:{ac:-3}}},
+      fail:{t:"Your mind goes blank. Was it the lion with the soft belly, or the dragon?",fx:{}}},
+    {label:"Promise Artemis you won't harm the cub",free:true,
+      ok:{t:"A silver light glows on the cave wall. Artemis protects young animals and she is pleased.",fx:{favor:{artemis:1}}}}
+   ]},
+   b:{fight:{name:"Nemean Lion",ref:"the Nemean Lion",hp:22,ac:15,atk:4,dmg:[1,8,1],desc:"Golden hide, hard as bronze."},next:"end",boss:true}
+  }},
+
+ sirens:{title:"The Sirens' Isle",place:"The wine-dark sea",gods:["poseidon","apollo"],tier:1,gold:22,len:5,start:"s1",
+  intro:"Ships keep vanishing near a rocky island. Sailors hear beautiful singing, then steer straight onto the rocks. Poseidon wants his sea safe. Apollo, god of music, wants those Sirens out-sung.",
+  nodes:{
+   s1:{t:"Your little ship nears the island. Soft music drifts over the water and your crew starts to sway.",next:"m",choices:[
+    {label:"Plug everyone's ears with beeswax",stat:"wit",dc:11,
+      ok:{t:"Clever! Your crew can't hear a single note.",fx:{boss:{atk:-2}}},
+      fail:{t:"The wax melts in the hot sun. The ship bumps a rock.",fx:{hp:-3}}},
+    {label:"Grab the steering oar and fight the current",stat:"might",dc:13,
+      ok:{t:"You hold the ship steady. Poseidon admires a good sailor.",fx:{favor:{poseidon:1}}},
+      fail:{t:"A wave throws you against the mast.",fx:{hp:-4}}},
+    {label:"Play a lyre louder than the Sirens",stat:"grace",dc:13,
+      ok:{t:"Your music drowns out theirs! Apollo taps his foot on Olympus.",fx:{favor:{apollo:1}}},
+      fail:{t:"A string snaps. Even the fish laugh at you.",fx:{}}}
+   ]},
+   m:{fight:{name:"Harpy Scouts",ref:"the harpies",hp:11,ac:12,atk:3,dmg:[1,6,0],desc:"Screechy bird-women who spy for the Sirens."},
+     win:{t:"The harpies flap away, shedding feathers. Your crew cheers.",fx:{}},next:"s2"},
+   s2:{t:"A shipwrecked sailor clings to a rock, waving. 'I've lived next to them for a year! I know their secret!'",next:"s3",choices:[
+    {label:"Dive in and pull him to the ship",stat:"might",dc:12,
+      ok:{t:"Dripping wet, he grins: 'They can't stand a song happier than theirs. I'll teach you one.'",set:"sailor",fx:{}},
+      fail:{t:"The current drags you both under before your crew hauls you out. He makes it, barely, but he's too tired to talk.",fx:{hp:-3}}},
+    {label:"Throw him a rope from the deck",stat:"wit",dc:11,
+      ok:{t:"Perfect throw. Once aboard, he teaches you a silly, cheerful sea shanty.",set:"sailor",fx:{}},
+      fail:{t:"The rope falls short. Your crew rescues him later, but he's not chatty.",fx:{}}},
+    {label:"Leave him. There's no time.",free:true,
+      ok:{t:"You sail on. Poseidon frowns at a sailor left behind.",fx:{favor:{poseidon:-1}}}}
+   ]},
+   s3:{t:"The Siren Queen rises on a rock. She is half woman, half bird, with feathers sharp as knives.",next:"b",choices:[
+    {label:"Sing the sailor's happy shanty",free:true,need:"sailor",
+      ok:{t:"The Sirens cover their ears and shriek! Apollo laughs with delight.",fx:{boss:{hp:-8},favor:{apollo:1}}}},
+    {label:"Pray to Poseidon for calm water",free:true,
+      ok:{t:"The waves go flat and still. Poseidon heard you.",fx:{favor:{poseidon:1}}}},
+    {label:"Look for a weak spot in her wings",stat:"wit",dc:13,
+      ok:{t:"One wing is bent from an old injury. You'll aim there.",fx:{boss:{ac:-2}}},
+      fail:{t:"Too many feathers. You can't tell.",fx:{}}},
+    {label:"Throw your cloak to tangle her wings",stat:"grace",dc:12,
+      ok:{t:"The cloak wraps her wing and she tumbles into the sea!",fx:{boss:{hp:-5}}},
+      fail:{t:"She slashes right through it, and you.",fx:{hp:-3}}}
+   ]},
+   b:{fight:{name:"Siren Queen",ref:"the Siren Queen",hp:18,ac:13,atk:4,dmg:[1,6,2],desc:"Her song can sink a fleet."},next:"end",boss:true}
+  }},
+
+ birds:{title:"The Stymphalian Birds",place:"Lake Stymphalia",gods:["artemis","ares"],tier:1,gold:18,len:4,start:"s1",
+  intro:"A flock of birds with bronze beaks nests in a swamp. They shoot their razor feathers like arrows at anyone who comes close.",
+  nodes:{
+   s1:{t:"The swamp is thick with mud and reeds. Bronze feathers stick out of the tree trunks.",next:"m",choices:[
+    {label:"Cross the swamp on fallen logs",stat:"grace",dc:12,
+      ok:{t:"Hop, hop, hop. On a log you find coins dropped by an earlier traveler.",fx:{gold:6}},
+      fail:{t:"SPLASH. You're muddy from head to toe.",fx:{hp:-3}}},
+    {label:"Weave a shield out of reeds",stat:"wit",dc:12,
+      ok:{t:"Thick reeds stop the feathers. Nice work!",fx:{boss:{atk:-2}}},
+      fail:{t:"It looks more like a basket than a shield.",fx:{}}},
+    {label:"Pull bronze feathers from the trees for darts",stat:"might",dc:12,
+      ok:{t:"Now you have sharp darts of your own. Ares approves.",fx:{favor:{ares:1}}},
+      fail:{t:"You cut your hand on one.",fx:{hp:-2}}}
+   ]},
+   m:{fight:{name:"Marsh Serpent",ref:"the marsh serpent",hp:12,ac:12,atk:3,dmg:[1,6,1],desc:"A long green snake that lives under the lily pads."},
+     win:{t:"In the serpent's nest you find a pair of old bronze rattles. They're VERY loud.",set:"rattles",fx:{}},next:"s2"},
+   s2:{t:"The birds roost high in the trees over the water. You need to get them into the air to fight them.",next:"b",choices:[
+    {label:"Clang the bronze rattles",free:true,need:"rattles",
+      ok:{t:"CLANG CLANG CLANG! The birds panic and crash into each other.",fx:{boss:{hp:-7}}}},
+    {label:"Throw rocks into the branches",stat:"grace",dc:13,
+      ok:{t:"Bonk! The flock bursts into the sky, a few birds already dizzy.",fx:{boss:{hp:-4}}},
+      fail:{t:"They fly up angry and shoot down at you.",fx:{hp:-3}}},
+    {label:"Ask Artemis for a hunter's eye",free:true,
+      ok:{t:"The goddess of the hunt is glad you asked for her help.",fx:{favor:{artemis:1}}}},
+    {label:"Charge in yelling",stat:"might",dc:13,
+      ok:{t:"Feathers fly everywhere! Ares loves it.",fx:{boss:{hp:-4},favor:{ares:1}}},
+      fail:{t:"They fly up and shoot down at you.",fx:{hp:-4}}}
+   ]},
+   b:{fight:{name:"Bronze Bird Flock",ref:"the bird flock",hp:18,ac:14,atk:4,dmg:[1,6,1],desc:"A hundred beaks of bronze."},next:"end",boss:true}
+  }},
+
+ python:{title:"The Serpent of Delphi",place:"Beneath Delphi",gods:["apollo","hermes"],tier:1,gold:20,len:4,start:"s1",
+  intro:"Under the Oracle's own temple, the giant serpent Python has woken up. It's swallowing the Oracle's sacred smoke, so no prophecies come out. Apollo wants it gone. Hermes thinks it could be tricked.",
+  nodes:{
+   s1:{t:"The temple steps are cracked and steam hisses out of the ground. The priestess, Pythia, hides behind a pillar.",next:"m",choices:[
+    {label:"Ask Pythia how to reach the serpent",stat:"wit",dc:11,
+      ok:{t:"She draws a map in the dust: a secret stair that comes out above the serpent's head.",set:"map",fx:{}},
+      fail:{t:"She's too scared to talk. You'll find your own way.",fx:{}}},
+    {label:"Follow the steam down",stat:"grace",dc:12,
+      ok:{t:"Along the way you find coins pilgrims left as offerings.",fx:{gold:5}},
+      fail:{t:"Ouch, that steam is HOT.",fx:{hp:-3}}},
+    {label:"Sing a hymn to Apollo",free:true,
+      ok:{t:"Sunlight pours through a crack in the roof. Apollo is listening.",fx:{favor:{apollo:1}}}}
+   ]},
+   m:{fight:{name:"Python Hatchlings",ref:"the hatchlings",hp:10,ac:11,atk:3,dmg:[1,4,1],desc:"Baby snakes, each as long as a horse."},
+     win:{t:"The hatchlings slither away. Their mother will be furious.",fx:{}},next:"s2"},
+   s2:{t:"The cave splits. One way leads across a bridge over boiling springs. The other is a solid wall... or is it?",next:"b",choices:[
+    {label:"Take Pythia's secret stair",free:true,need:"map",
+      ok:{t:"You climb out right above Python's head and drop on it!",fx:{boss:{hp:-6}}}},
+    {label:"Cross the boiling bridge",stat:"grace",dc:13,
+      ok:{t:"Steady steps. You don't even get your sandals wet.",fx:{}},
+      fail:{t:"A plank breaks. Boiling splash!",fx:{hp:-4}}},
+    {label:"Leave a straw decoy wearing your cloak",stat:"wit",dc:13,
+      ok:{t:"Python bites the decoy while you sneak around. Hermes would be proud.",fx:{boss:{atk:-2},favor:{hermes:1}}},
+      fail:{t:"Python sniffs the decoy, then sniffs you. Uh oh.",fx:{hp:-2}}}
+   ]},
+   b:{fight:{name:"Python",ref:"Python",hp:22,ac:13,atk:4,dmg:[1,8,1],desc:"A serpent as long as a temple."},next:"end",boss:true}
+  }},
+
+ labyrinth:{title:"The Labyrinth of Crete",place:"Knossos, Crete",gods:["athena","ares"],tier:2,gold:25,len:5,start:"s1",
+  intro:"Under King Minos's palace twists a maze that no one escapes. Deep inside waits the Minotaur, half man and half bull.",
+  nodes:{
+   s1:{t:"Princess Ariadne meets you at the gate. 'Take this ball of thread,' she whispers. 'Tie one end by the door.'",next:"m",choices:[
+    {label:"Take the thread and thank her",free:true,
+      ok:{t:"Smart heroes accept good help. Athena approves.",fx:{favor:{athena:1}}}},
+    {label:"Memorize every turn as you walk",stat:"wit",dc:13,
+      ok:{t:"Left, left, right, left... You map it in your head and find a forgotten pile of coins.",fx:{gold:8}},
+      fail:{t:"Lost! You wander in circles for hours.",fx:{hp:-3}}},
+    {label:"Smash straight through the walls",stat:"might",dc:14,
+      ok:{t:"CRASH! Walls crumble. Up on Olympus, Ares cheers.",fx:{favor:{ares:1}}},
+      fail:{t:"The wall is thicker than it looked. Ouch.",fx:{hp:-4}}}
+   ]},
+   m:{fight:{name:"Bronze Guard of Minos",ref:"the bronze guard",hp:13,ac:13,atk:4,dmg:[1,6,1],desc:"King Minos sent him to make sure you never come out."},
+     win:{t:"The guard clanks to the floor. A ring of iron keys rolls out of his belt.",set:"keys",fx:{}},next:"s2"},
+   s2:{t:"You find a locked cell. Inside are seven young Athenians, sent as a 'gift' to the Minotaur.",next:"s3",choices:[
+    {label:"Unlock it with the guard's keys",free:true,need:"keys",
+      ok:{t:"Click! They hug you and promise to help however they can. Athena is proud.",set:"freed",fx:{favor:{athena:1}}}},
+    {label:"Pick the lock",stat:"grace",dc:13,
+      ok:{t:"Click! They're free, and they want to help.",set:"freed",fx:{}},
+      fail:{t:"The pick snaps and cuts your finger. They'll have to wait.",fx:{hp:-2}}},
+    {label:"Promise to come back for them later",free:true,
+      ok:{t:"They nod bravely. You hurry on.",fx:{}}}
+   ]},
+   s3:{t:"Hooves stamp in the dark. The Minotaur lowers its horns and charges!",next:"b",choices:[
+    {label:"Shout for the Athenians to distract it",free:true,need:"freed",
+      ok:{t:"Seven voices yell from every direction. The Minotaur spins around, totally confused.",fx:{boss:{hp:-4,atk:-2}}}},
+    {label:"Leap aside at the last second",stat:"grace",dc:13,
+      ok:{t:"It slams horns-first into the wall and staggers.",fx:{boss:{hp:-6}}},
+      fail:{t:"The horns graze your side.",fx:{hp:-5}}},
+    {label:"Meet the charge head-on",stat:"might",dc:15,
+      ok:{t:"You grab its horns and push it back! Ares roars with joy.",fx:{boss:{hp:-8},favor:{ares:1}}},
+      fail:{t:"It's like being hit by a cart full of rocks.",fx:{hp:-6}}}
+   ]},
+   b:{fight:{name:"Minotaur",ref:"the Minotaur",hp:26,ac:13,atk:5,dmg:[1,8,2],desc:"Horns like spears, temper like a storm."},next:"end",boss:true}
+  }},
+
+ cyclops:{title:"The Cyclops' Cave",place:"Island of the Cyclopes",gods:["athena","poseidon"],tier:2,gold:22,len:5,start:"s1",
+  intro:"A giant one-eyed shepherd named Polyphemus has trapped travelers in his cave. He is Poseidon's son, so the sea god is watching closely.",
+  nodes:{
+   s1:{t:"You sneak into the cave. Wheels of cheese line the walls. Then a huge rock rolls across the doorway. The Cyclops is home.",next:"m",choices:[
+    {label:"Tell him your name is 'Nobody'",stat:"wit",dc:13,
+      ok:{t:"Later, when he yells 'Nobody is hurting me!', none of the other Cyclopes will come to help him.",fx:{boss:{hp:-6}}},
+      fail:{t:"'That's a silly name,' he grumbles. He doesn't believe you.",fx:{}}},
+    {label:"Offer him strong wine (5 drachmae)",free:true,cost:5,
+      ok:{t:"He gulps it down and gets sleepy and clumsy.",fx:{gold:-5,boss:{ac:-3}}}},
+    {label:"Hide among the sheep",stat:"grace",dc:12,
+      ok:{t:"You cling under a woolly ram. Athena smiles at your cleverness.",fx:{favor:{athena:1}}},
+      fail:{t:"He steps right on your foot.",fx:{hp:-3}}}
+   ]},
+   m:{fight:{name:"Giant Ram",ref:"the giant ram",hp:12,ac:11,atk:3,dmg:[1,6,1],desc:"Polyphemus's favorite. It does not like you."},
+     win:{t:"The ram gives up and goes back to chewing. You've made the sheep very nervous.",fx:{}},next:"s2"},
+   s2:{t:"In the back of the cave, three sailors are tied up with rope as thick as your arm.",next:"s3",choices:[
+    {label:"Untie them quietly",stat:"wit",dc:12,
+      ok:{t:"You find the end of the knot. They're free and ready to help!",set:"crew",fx:{}},
+      fail:{t:"The knot just gets tighter. You'll have to come back.",fx:{}}},
+    {label:"Cut the ropes",stat:"might",dc:13,
+      ok:{t:"Snap, snap, snap. Three grateful sailors!",set:"crew",fx:{}},
+      fail:{t:"The rope snaps back and smacks you.",fx:{hp:-2}}},
+    {label:"Grab some cheese for the road",free:true,
+      ok:{t:"Cyclops cheese is surprisingly good for you.",fx:{ambrosia:1}}}
+   ]},
+   s3:{t:"Polyphemus finds you and swings a whole tree trunk like a club.",next:"b",choices:[
+    {label:"Everyone push the door rock together",free:true,need:"crew",
+      ok:{t:"Sunlight floods in and the Cyclops squints. He can barely see you!",fx:{boss:{atk:-2,ac:-1}}}},
+    {label:"Promise Poseidon you won't blind his son",free:true,
+      ok:{t:"The sea grows quiet. Poseidon will remember this kindness.",fx:{favor:{poseidon:2}}}},
+    {label:"Climb onto a ledge above him",stat:"grace",dc:13,
+      ok:{t:"You jump from the ledge and land a strong hit.",fx:{boss:{hp:-5}}},
+      fail:{t:"You slip off the ledge.",fx:{hp:-4}}}
+   ]},
+   b:{fight:{name:"Polyphemus",ref:"Polyphemus",hp:26,ac:12,atk:5,dmg:[1,10,1],desc:"Son of Poseidon. Big, hungry, grumpy."},next:"end",boss:true}
+  }},
+
+ underworld:{title:"Gates of the Underworld",place:"River Styx",gods:["hades","zeus"],tier:2,gold:25,len:5,start:"s1",
+  intro:"A sneaky spirit stole Hades' golden key and fled across the river Styx. Get it back before ghosts start wandering into the world above.",
+  nodes:{
+   s1:{t:"Charon the ferryman holds out a bony hand. 'One coin to cross,' he rasps.",next:"m",choices:[
+    {label:"Pay him fairly (5 drachmae)",free:true,cost:5,
+      ok:{t:"Charon nods. Hades likes guests who follow the rules.",fx:{gold:-5,favor:{hades:1}}}},
+    {label:"Convince him you work for Hades",stat:"wit",dc:13,
+      ok:{t:"He squints, then nods slowly. A free ride!",fx:{}},
+      fail:{t:"'Nice try.' He makes you swim beside the boat. Brrr.",fx:{hp:-3}}},
+    {label:"Swim across yourself",stat:"might",dc:14,
+      ok:{t:"Strong strokes carry you over the cold dark water.",fx:{}},
+      fail:{t:"The river is freezing and full of grabby ghost hands.",fx:{hp:-5}}}
+   ]},
+   m:{fight:{name:"Restless Shades",ref:"the shades",hp:12,ac:12,atk:3,dmg:[1,6,0],desc:"Ghosts who never paid Charon. They want YOUR coins."},
+     win:{t:"Calmed down, one ghost whispers: 'Cerberus will do anything for a honey cake.' It points to a cake left on an altar.",set:"honey",fx:{}},next:"s2"},
+   s2:{t:"You walk through the gray Fields of Asphodel. Persephone, Queen of the Underworld, is tending pale flowers.",next:"s3",choices:[
+    {label:"Bow and ask for her help",free:true,
+      ok:{t:"'You have good manners for a living person,' she says. 'I'll be watching at the gate.'",set:"persephone",fx:{favor:{hades:1}}}},
+    {label:"Sneak past her",stat:"grace",dc:12,
+      ok:{t:"She doesn't notice. Probably.",fx:{}},
+      fail:{t:"You trip over a gravestone.",fx:{hp:-3}}},
+    {label:"Eat a juicy pomegranate from her garden",free:true,
+      ok:{t:"Delicious! Persephone sighs. 'Everyone who eats food here has to stay... oh, fine, I'll let it go this time.'",fx:{hp:5}}}
+   ]},
+   s3:{t:"Cerberus, the three-headed guard dog, blocks the gate. Six eyes glare at you. Behind him, the spirit giggles and jingles the key.",next:"b",choices:[
+    {label:"Toss Cerberus the honey cake",free:true,need:"honey",
+      ok:{t:"Three heads fight over one cake. You walk right past and grab the key. No fight needed!",fx:{skip:true}}},
+    {label:"Ask Persephone to call him",free:true,need:"persephone",
+      ok:{t:"'Cerberus! Sit!' All three heads sit. Hades smiles for the first time in a century.",fx:{skip:true,favor:{hades:1}}}},
+    {label:"Sing Cerberus a lullaby",stat:"grace",dc:14,
+      ok:{t:"All three heads yawn... and snore. You tiptoe past and grab the key!",fx:{skip:true}},
+      fail:{t:"One head dozes off. The other two are very, very awake.",fx:{hp:-2,boss:{hp:-6}}}},
+    {label:"Ask Zeus to send a storm",free:true,
+      ok:{t:"Thunder booms through the underworld. Zeus is pleased, but Hades frowns at the mess.",fx:{favor:{zeus:1,hades:-1},boss:{hp:-5}}}}
+   ]},
+   b:{fight:{name:"Cerberus",ref:"Cerberus",hp:24,ac:13,atk:5,dmg:[1,8,1],desc:"Three heads, zero chill."},next:"end",boss:true}
+  }},
+
+ fleece:{title:"The Golden Fleece",place:"Colchis",gods:["ares","hermes"],tier:2,gold:28,len:4,start:"s1",
+  intro:"In faraway Colchis, a golden fleece hangs in a grove sacred to Ares, guarded by a dragon that never sleeps. King Aeetes says you can have it, if you survive his tasks.",
+  nodes:{
+   s1:{t:"King Aeetes smiles a sneaky smile. 'First, harness my fire-breathing bulls and plow my field.'",next:"m",choices:[
+    {label:"Wrestle the bulls into the harness",stat:"might",dc:14,
+      ok:{t:"Smoke everywhere, but you did it! Ares is impressed.",fx:{favor:{ares:1}}},
+      fail:{t:"Toasty. Very toasty.",fx:{hp:-5}}},
+    {label:"Ask Princess Medea for help",stat:"wit",dc:12,
+      ok:{t:"Medea slips you a fire-proof ointment, and a little bottle: 'Sleeping potion. For later.'",set:"medea",fx:{}},
+      fail:{t:"She doesn't trust you yet.",fx:{}}},
+    {label:"Tie the bulls' tails together",stat:"grace",dc:13,
+      ok:{t:"They spin in circles until they're too dizzy to fight. Hermes laughs his head off.",fx:{favor:{hermes:1}}},
+      fail:{t:"A bull sneezes fire on your sandals.",fx:{hp:-3}}}
+   ]},
+   m:{fight:{name:"Dragon-Tooth Warriors",ref:"the skeleton warriors",hp:14,ac:13,atk:4,dmg:[1,6,1],desc:"The king planted dragon teeth. Skeletons grew."},
+     win:{t:"The last skeleton crumbles into dust. King Aeetes looks very annoyed.",fx:{gold:5}},next:"s2"},
+   s2:{t:"The sacred grove. A dragon coils around the oak tree where the Golden Fleece shines. Its eyes never close.",next:"b",choices:[
+    {label:"Pour Medea's sleeping potion",free:true,need:"medea",
+      ok:{t:"The dragon's eyes close for the first time in a hundred years. You take the fleece without a fight!",fx:{skip:true}}},
+    {label:"Dazzle it with your shiny shield",stat:"wit",dc:13,
+      ok:{t:"It stares at its own reflection, confused.",fx:{boss:{atk:-2}}},
+      fail:{t:"It isn't interested in shiny things.",fx:{}}},
+    {label:"Shout a challenge in the name of Ares",free:true,
+      ok:{t:"This is Ares' grove, and he likes your nerve.",fx:{favor:{ares:1}}}},
+    {label:"Climb the oak and drop onto it",stat:"grace",dc:14,
+      ok:{t:"Right on its head!",fx:{boss:{hp:-6}}},
+      fail:{t:"A branch snaps.",fx:{hp:-4}}}
+   ]},
+   b:{fight:{name:"Colchian Dragon",ref:"the dragon",hp:26,ac:14,atk:5,dmg:[1,8,2],desc:"It never, ever sleeps."},next:"end",boss:true}
+  }},
+
+ medusa:{title:"Medusa's Island",place:"The edge of the world",gods:["athena","hades"],tier:3,gold:28,len:5,start:"s1",
+  intro:"Medusa has snakes for hair, and one look at her face turns a person to stone. Athena wants her stopped. Hades wants the trapped spirits of her statues set free.",
+  nodes:{
+   s1:{t:"Three gray sisters, the Graeae, share one eye between them. They know the way to Medusa's island but won't tell.",next:"m",choices:[
+    {label:"Snatch the eye as they pass it",stat:"grace",dc:13,
+      ok:{t:"'Give it back!' They tell you the way, and a secret: Medusa can't stand her own reflection.",fx:{boss:{ac:-2}}},
+      fail:{t:"They poke you with their walking sticks. Hard.",fx:{hp:-3}}},
+    {label:"Trade them a riddle",stat:"wit",dc:12,
+      ok:{t:"They love your riddle so much they pay you for it, and point the way.",fx:{gold:8}},
+      fail:{t:"'We've heard that one,' they cackle. You find the way yourself.",fx:{}}},
+    {label:"Free the trapped spirits along the shore",free:true,
+      ok:{t:"Grateful ghosts drift down to the underworld. Hades thanks you.",fx:{favor:{hades:1}}}}
+   ]},
+   m:{fight:{name:"Living Statue",ref:"the living statue",hp:15,ac:14,atk:4,dmg:[1,6,1],desc:"A warrior Medusa turned to stone. Somehow, it still moves."},
+     win:{t:"The statue crumbles. A faint voice whispers 'thank you' and fades away.",fx:{favor:{hades:1}}},next:"s2"},
+   s2:{t:"Hiding behind a pillar you find a young hero named Perseus. He has a sword, but he's shaking.",next:"s3",choices:[
+    {label:"Make a plan together",stat:"wit",dc:12,
+      ok:{t:"'You distract her, I'll strike from behind.' Perseus grins. Teamwork!",set:"perseus",fx:{}},
+      fail:{t:"You argue about the plan. He runs off to try alone.",fx:{}}},
+    {label:"Give him one of your ambrosia jars",free:true,need:"hasAmbrosia",
+      ok:{t:"He stops shaking. 'I won't forget this. I'll be right behind you.'",set:"perseus",fx:{ambrosia:-1}}},
+    {label:"Tell him to go home",free:true,
+      ok:{t:"He leaves, relieved. You're on your own.",fx:{}}}
+   ]},
+   s3:{t:"Hissing fills the air. Medusa slithers out of her temple.",next:"b",choices:[
+    {label:"Signal Perseus",free:true,need:"perseus",
+      ok:{t:"Perseus leaps from the shadows and slashes. Medusa screams!",fx:{boss:{hp:-7}}}},
+    {label:"Use your polished shield as a mirror",stat:"wit",dc:12,
+      ok:{t:"You only look at her reflection. Her stare can't touch you!",fx:{boss:{atk:-3}}},
+      fail:{t:"You peek for one second. Your legs go stiff as stone.",fx:{hp:-5}}},
+    {label:"Ask Athena for guidance",free:true,
+      ok:{t:"An owl lands on your shoulder. Athena is with you.",fx:{favor:{athena:1}}}}
+   ]},
+   b:{fight:{name:"Medusa",ref:"Medusa",hp:24,ac:14,atk:5,dmg:[1,8,1],desc:"Don't look her in the eye."},next:"end",boss:true}
+  }},
+
+ talos:{title:"The Bronze Giant",place:"Shores of Crete",gods:["hephaestus","poseidon"],tier:3,gold:30,len:4,start:"s1",
+  intro:"Talos, a bronze giant built by Hephaestus, guards Crete. Something has gone wrong: he's hurling boulders at every ship. Hephaestus wants his creation back unbroken. Poseidon wants the boulders out of his sea.",
+  nodes:{
+   s1:{t:"Boulders splash all around your ship.",next:"m",choices:[
+    {label:"Steer through the boulder rain",stat:"might",dc:13,
+      ok:{t:"Hard left! Hard right! Poseidon nods at your sailing.",fx:{favor:{poseidon:1}}},
+      fail:{t:"A boulder clips the ship and you go flying.",fx:{hp:-4}}},
+    {label:"Flash a mirror signal in forge-code",stat:"wit",dc:13,
+      ok:{t:"Talos pauses, confused. Hephaestus notices your clever idea.",fx:{favor:{hephaestus:1},boss:{atk:-1}}},
+      fail:{t:"You just blind yourself.",fx:{}}},
+    {label:"Dive in and swim to shore",stat:"grace",dc:12,
+      ok:{t:"You slip onto the beach unseen.",fx:{}},
+      fail:{t:"A wave tumbles you onto the rocks.",fx:{hp:-4}}}
+   ]},
+   m:{fight:{name:"Bronze Hounds",ref:"the bronze hounds",hp:14,ac:14,atk:4,dmg:[1,6,0],desc:"Clockwork dogs. They bark like rusty hinges."},
+     win:{t:"One hound falls apart. You pocket a shiny bronze gear from inside it.",set:"gear",fx:{}},next:"s2"},
+   s2:{t:"Talos stomps down the beach, tall as a lighthouse. Near his heel you spot a missing gear, and a single bronze nail holding in his golden ichor.",next:"b",choices:[
+    {label:"Fix him with the gear you found",free:true,need:"gear",
+      ok:{t:"Click. Talos blinks, stops, and bows. He's himself again! Hephaestus is overjoyed.",fx:{skip:true,favor:{hephaestus:2}}}},
+    {label:"Pull out the bronze nail",stat:"might",dc:15,
+      ok:{t:"Golden ichor gushes out and Talos wobbles. Hephaestus winces.",fx:{boss:{hp:-10},favor:{hephaestus:-1}}},
+      fail:{t:"He stomps. You're under the foot.",fx:{hp:-5}}},
+    {label:"Ask Poseidon for a wave to knock him over",free:true,
+      ok:{t:"SPLOOSH. Talos lands on his back, dented.",fx:{favor:{poseidon:1},boss:{ac:-2}}}}
+   ]},
+   b:{fight:{name:"Talos",ref:"Talos",hp:28,ac:15,atk:5,dmg:[1,10,1],desc:"A giant made of bronze."},next:"end",boss:true}
+  }},
+
+ hesperides:{title:"Garden of the Hesperides",place:"The far west",gods:["aphrodite","hephaestus"],tier:3,gold:30,len:4,start:"s1",
+  intro:"At the edge of the world grows a tree of golden apples, guarded by Ladon, a dragon with a hundred heads. Aphrodite wants one apple to settle an old argument. Hephaestus says the apples only cause trouble.",
+  nodes:{
+   s1:{t:"To find the garden you must ask Atlas, the Titan who holds up the sky on his shoulders.",next:"m",choices:[
+    {label:"Offer to hold the sky while he rests",stat:"might",dc:15,
+      ok:{t:"It's SO heavy. Atlas stretches and says, 'I owe you one, little hero.'",set:"atlas",fx:{}},
+      fail:{t:"Your knees buckle. Atlas grabs it back just in time.",fx:{hp:-5}}},
+    {label:"Ask the nymphs who tend the garden",stat:"wit",dc:12,
+      ok:{t:"They teach you a sleepy song that dragons love. Aphrodite approves of good manners.",fx:{favor:{aphrodite:1}},set:"song"},
+      fail:{t:"They giggle and won't say a word.",fx:{}}},
+    {label:"Hammer out a star-compass to find the way",free:true,
+      ok:{t:"You bang it together from scrap bronze. Hephaestus loves a maker.",fx:{favor:{hephaestus:1}}}}
+   ]},
+   m:{fight:{name:"Thorn Vines",ref:"the thorn vines",hp:12,ac:12,atk:4,dmg:[1,6,0],desc:"The garden's hedges grab at anyone without an invitation."},
+     win:{t:"You hack through the hedge. Golden light glows ahead.",fx:{}},next:"s2"},
+   s2:{t:"Ladon's hundred heads wake up one by one. Every single one is looking at you.",next:"b",choices:[
+    {label:"Ask Atlas to pick an apple for you",free:true,need:"atlas",
+      ok:{t:"Atlas reaches right over the dragon's heads and plucks one. 'Now we're even!' No fight needed.",fx:{skip:true}}},
+    {label:"Sing the nymphs' sleepy song",free:true,need:"song",
+      ok:{t:"Fifty heads fall asleep. Only fifty left!",fx:{boss:{hp:-9}}}},
+    {label:"Give the heads something to argue about",stat:"wit",dc:13,
+      ok:{t:"'Which head is the prettiest?' you ask. Forty heads start fighting each other.",fx:{boss:{atk:-2,hp:-3}}},
+      fail:{t:"They all agree: you look tasty.",fx:{}}},
+    {label:"Rest behind a fountain first",free:true,
+      ok:{t:"Magic water. You feel much better.",fx:{hp:7}}}
+   ]},
+   b:{fight:{name:"Ladon",ref:"Ladon",hp:28,ac:14,atk:5,dmg:[1,8,2],desc:"A hundred heads, a hundred appetites."},next:"end",boss:true}
+  }},
+
+ olympus:{title:"The War on Olympus",place:"Mount Olympus",gods:[],tier:4,gold:0,final:true,len:5,start:"s1",
+  intro:"The gods are still fighting over Eris's golden apple, and the quarrel has woken the biggest monster of all: Typhon. Eris is on Olympus, laughing. It's time to end this.",
+  nodes:{
+   s1:{t:"Olympus is chaos. Gods are shouting, thunder is cracking, and in the middle of it all Eris tosses her golden apple from hand to hand.",next:"e",choices:[
+    {label:"Remind the gods how you refused the apple",free:true,need:"refused",
+      ok:{t:"'This hero wouldn't fall for Eris's trick. Why are WE?' says Zeus. The gods stop arguing. Eris has nothing to feed on and flees!",fx:{skip:true}}},
+    {label:"Snatch the golden apple, the source of her power",free:true,need:"spied",
+      ok:{t:"You knew where she keeps it! Without the apple, Eris is much weaker.",fx:{boss:{hp:-8,ac:-2}}}},
+    {label:"Challenge Eris to fight you",stat:"might",dc:13,
+      ok:{t:"You land the first hit before she can laugh.",fx:{boss:{hp:-5}}},
+      fail:{t:"She trips you with a golden thread.",fx:{hp:-4}}},
+    {label:"Talk the gods into working together",stat:"wit",dc:14,
+      ok:{t:"Some of the shouting stops. Zeus is grateful.",fx:{favor:{zeus:1},boss:{atk:-1}}},
+      fail:{t:"Nobody listens. Everybody's yelling.",fx:{}}}
+   ]},
+   e:{fight:{name:"Eris",ref:"Eris",hp:34,ac:15,atk:7,dmg:[1,8,2],desc:"Goddess of discord. She loves a good argument."},hpIf:{judged:6},
+     win:{t:"Eris drops the golden apple and vanishes in a puff of grumpiness. But her last trick has worked: Typhon is climbing the mountain.",fx:{}},next:"s2"},
+   s2:{t:"Typhon's shadow covers the whole mountain. A hundred dragon heads roar and rocks fall like rain.",next:"aid",choices:[
+    {label:"Rally the heroes of Greece to fight with you",stat:"wit",dc:14,
+      ok:{t:"Every hero you've helped answers the call! Arrows and spears fly at Typhon.",fx:{boss:{hp:-10}}},
+      fail:{t:"Everyone is too scared. You'll have to do this yourself.",fx:{}}},
+    {label:"Climb to the summit and strike first",stat:"might",dc:14,
+      ok:{t:"You leap from the peak and hit him right on the nose!",fx:{boss:{hp:-8}}},
+      fail:{t:"A boulder knocks you back down the slope.",fx:{hp:-5}}},
+    {label:"Dodge through the rockfall",stat:"grace",dc:14,
+      ok:{t:"You weave between boulders to a spot where his heads can't reach.",fx:{boss:{atk:-2}}},
+      fail:{t:"A rock clips your shoulder.",fx:{hp:-4}}},
+    {label:"Ask Echidna to call Typhon off",free:true,need:"echidnaKnows",
+      ok:{t:"Echidna, who now knows Eris tricked them all, roars across the sky. Typhon hesitates and half his heads turn to listen.",fx:{boss:{hp:-10,atk:-1}}}},
+    {label:"Strike the scar Prometheus told you about",free:true,need:"listened",
+      ok:{t:"Right where the Titan said: an old scar from Zeus's first battle. Typhon howls!",fx:{boss:{hp:-8,ac:-1}}}},
+    {label:"Eat the golden apple Eris dropped",free:true,
+      ok:{t:"It tastes like sunshine. You feel amazing.",fx:{hp:10}}}
+   ]},
+   aid:{aid:true,next:"b"},
+   b:{fight:{name:"Typhon",ref:"Typhon",hp:125,ac:16,atk:8,dmg:[2,8,2],desc:"Father of all monsters. A hundred heads.",
+       breath:{every:3,dmg:[4,6,2],name:"blasts a storm of fire from a hundred mouths",off:"prometheus"},enrage:{atk:3},regen:2,regenOff:"listened",regenText:"Typhon's wounds smoke and close."},next:"end",boss:true}
+  }}
+};
+const POOL = ["nemea","sirens","birds","python","boar","pandora","labyrinth","cyclops","underworld","fleece","scylla","troy","chariot","medusa","talos","hesperides","diomedes","antaeus","arachne","echidna"];
+const TOTAL_DAYS = 45;
+const LEGEND_FLOOR = {hydra:0, chimera:53, olympus:79};
+const SEGS = [
+  {name:"Part I · The Monsters Wake",start:1,end:15,tiers:[1],legend:"hydra",foe:"the Hydra"},
+  {name:"Part II · The Quarrel of the Gods",start:16,end:30,tiers:[1,2],legend:"chimera",foe:"the Chimera"},
+  {name:"Part III · The War on Olympus",start:31,end:45,tiers:[2,3],legend:"olympus",foe:"Typhon"}
+];
+const EVENTS = {
+ ev1:{title:"A Message from Hermes",
+  t:"Hermes zips into Delphi on winged sandals. 'Psst, hero. I know who's waking up all the monsters. It's Eris, goddess of discord. She threw the golden apple at the feast, and every argument between the gods makes her stronger.'",
+  choices:[
+   {label:"Follow Hermes and spy on Eris's hideout",t:"From behind a rock you watch Eris polish her golden apple and cackle. Now you know: the apple is where her power comes from.",fx:{favor:{hermes:1}},setG:"spied"},
+   {label:"Help a village wrecked by monsters (10 drachmae)",cost:10,t:"You pay for new fences and help the villagers rebuild. Apollo and Artemis both notice.",fx:{gold:-10,favor:{apollo:1,artemis:1}}},
+   {label:"Ask Hermes for traveling money",t:"Hermes 'finds' a bag of coins. You decide not to ask where it came from.",fx:{gold:15}}
+  ]},
+ ev2:{title:"The Judgment of the Apple",
+  t:"A golden apple lands at your feet. Scratched on it: 'For the Fairest.' Athena and Aphrodite appear in a flash of light. 'Mortal, you are a famous hero now. YOU decide which of us deserves it.' Somewhere far away, Eris giggles.",
+  choices:[
+   {label:"Give the apple to Athena",t:"Athena smiles and promises to guide your mind. Aphrodite storms off. Eris laughs: another quarrel to feed on.",fx:{favor:{athena:2,aphrodite:-2}},setG:"judged"},
+   {label:"Give the apple to Aphrodite",t:"Aphrodite showers you with rose petals. Athena turns away coldly. Eris laughs: another quarrel to feed on.",fx:{favor:{aphrodite:2,athena:-2}},setG:"judged"},
+   {label:"Refuse: 'This apple was made to start fights. I won't choose.'",t:"Both goddesses are annoyed. But Zeus nods slowly from his cloud. A hero who can't be tricked by Eris is rare.",fx:{favor:{athena:-1,aphrodite:-1,zeus:2}},setG:"refused"}
+  ]},
+ ev3:{title:"The Titan in Chains",
+  t:"High on a cold mountain, the Titan Prometheus is chained to a rock. Zeus put him there for giving fire to humans. 'Hero,' he calls, 'I fought beside Zeus against Typhon long ago. I know how to beat him. Free me, and I'll teach you.'",
+  choices:[
+   {label:"Break his chains",t:"The chains snap. Prometheus wraps you in sacred fire: 'Now Typhon's flames cannot burn you.' Zeus is NOT happy about this.",fx:{favor:{zeus:-2,hephaestus:1}},setG:"prometheus"},
+   {label:"Bring him water and listen, but leave him chained",t:"He drinks and whispers: 'Typhon has a scar on his chest from his first battle with Zeus. Strike there.' Zeus approves of your respect for his rules.",fx:{favor:{zeus:1}},setG:"listened"},
+   {label:"Leave him. Zeus's rules are Zeus's rules.",t:"You walk away. Prometheus sighs. Zeus thunders his approval.",fx:{favor:{zeus:2}}}
+  ]}
+};
+const ENCOUNTERS = {
+ beggar:{title:"The Hungry Traveler",t:"An old man in a muddy cloak asks if you can spare some food.",choices:[
+   {label:"Share your meal with him (3 drachmae)",cost:3,t:"He straightens up, and his eyes flash like lightning. It was Zeus in disguise! He always tests how mortals treat strangers.",fx:{gold:-3,favor:{zeus:2}}},
+   {label:"Keep walking",t:"Later that day, thunder rumbles over your head. Odd. The sky was clear.",fx:{favor:{zeus:-1}}}]},
+ sphinx:{title:"The Sphinx's Riddle",t:"A Sphinx, with a lion's body and a woman's face, blocks the road. 'What walks on four legs in the morning, two at noon, and three in the evening?'",choices:[
+   {label:"Think hard and answer",stat:"wit",dc:12,ok:{t:"'A person! Babies crawl, adults walk, and old people use a cane.' The Sphinx grumbles and pays you to go away.",fx:{gold:15}},
+     fail:{t:"'A... very confused horse?' Wrong. You pay a toll to get past.",fx:{gold:-5}}},
+   {label:"Take the long way around",t:"It takes all day, but at least nobody asked you any riddles.",fx:{}}]},
+ chiron:{title:"Chiron the Teacher",t:"The wise centaur Chiron, teacher of heroes, offers you a day of lessons.",choices:[
+   {label:"Learn wrestling",t:"Chiron is a tough teacher. You feel stronger already.",fx:{train:{might:2}}},
+   {label:"Learn astronomy and medicine",t:"Your head is full of stars and healing herbs.",fx:{train:{wit:2}}},
+   {label:"Learn archery",t:"By sunset you can hit an apple from fifty paces.",fx:{train:{grace:2}}}]},
+ midas:{title:"King Midas's Garden",t:"King Midas, whose touch turns things to gold, offers to turn your old sandals into solid gold.",choices:[
+   {label:"Yes please!",t:"Your sandals are now gold. Very heavy, very shiny. You sell them in the market.",fx:{gold:20}},
+   {label:"'No thanks. Gold isn't everything.'",t:"Midas looks puzzled. Apollo, who once gave Midas donkey ears, laughs and approves.",fx:{favor:{apollo:1}}}]},
+ pan:{title:"Pan's Party",t:"In a forest clearing, Pan the goat-footed god plays his pipes. Satyrs and nymphs are dancing.",choices:[
+   {label:"Join the dance",stat:"grace",dc:12,ok:{t:"You dance until the moon comes up. Aphrodite loves a good party, and the nymphs give you a jar of nectar.",fx:{favor:{aphrodite:1},ambrosia:1}},
+     fail:{t:"You step on a satyr's hoof. Everyone laughs, including you.",fx:{}}},
+   {label:"Sit and listen to the music",t:"A peaceful evening. Apollo enjoys the music too.",fx:{favor:{apollo:1}}}]},
+ daedalus:{title:"Daedalus's Workshop",t:"The great inventor Daedalus shows you his workshop: moving statues, wax wings, and gadgets everywhere.",choices:[
+   {label:"Buy a bronze shield at half price (12 drachmae)",cost:12,need:"noShield",t:"'Lighter and stronger than any in the market,' he says.",fx:{gold:-12,item:"shield"}},
+   {label:"Ask about the wax wings",t:"'Don't fly too close to the sun,' he says sadly. You learn a lot about engineering.",fx:{train:{wit:1}}},
+   {label:"Help him sweep up",t:"He pays you, and Hephaestus approves of anyone who respects a workshop.",fx:{gold:6,favor:{hephaestus:1}}}]},
+ narcissus:{title:"The Mirror Pool",t:"A young man named Narcissus stares at his own reflection in a pool. He hasn't moved in days.",choices:[
+   {label:"Help him look away",stat:"wit",dc:12,ok:{t:"'Look, a butterfly!' He blinks, and walks off to get some lunch. Aphrodite is relieved.",fx:{favor:{aphrodite:1}}},
+     fail:{t:"He doesn't even notice you.",fx:{}}},
+   {label:"Check your own reflection",t:"Looking good, hero. You spend way too long at the pool.",fx:{}}]},
+ storm:{title:"Storm on the Shore",t:"A sudden storm. Fishing boats are struggling to get back to the harbor.",choices:[
+   {label:"Wade in and pull the boats to shore",stat:"might",dc:12,ok:{t:"Every boat is saved. The fishermen share their catch, and Poseidon calms the waves.",fx:{gold:5,favor:{poseidon:1}}},
+     fail:{t:"A wave knocks you flat, but the fishermen make it in on their own.",fx:{}}},
+   {label:"Find shelter and wait",t:"You watch the storm from a cave. Dry, at least.",fx:{}}]},
+ duelist:{title:"The Wandering Duelist",t:"A young hero blocks the bridge. 'I hear you're famous. Prove it! Best of three!'",choices:[
+   {label:"Accept the challenge",stat:"might",dc:13,ok:{t:"Two out of three! He shakes your hand and pays the bet. Ares cheers.",fx:{gold:10,favor:{ares:1}}},
+     fail:{t:"He wins, fair and square. You pay the bet.",fx:{gold:-5}}},
+   {label:"'Let's race instead'",stat:"grace",dc:13,ok:{t:"You win by a mile. Hermes, god of runners, is impressed.",fx:{gold:8,favor:{hermes:1}}},
+     fail:{t:"He's fast. Very fast. You pay the bet.",fx:{gold:-5}}},
+   {label:"Politely decline",t:"He calls you a chicken. You don't care.",fx:{}}]},
+ spring:{title:"Persephone Returns",t:"It's the day Persephone comes back from the underworld, and flowers burst up everywhere. The villagers are celebrating.",choices:[
+   {label:"Help plant the spring fields",t:"Hard work in the sun. Persephone smiles, and tells her husband Hades about you.",fx:{favor:{hades:1}}},
+   {label:"Join the feast",t:"Honey cakes, figs and fresh bread. You pack some for later.",fx:{ambrosia:1}}]},
+ cattle:{title:"Apollo's Missing Cattle",t:"Apollo's sacred cattle have vanished. The only clue: tracks that go BACKWARDS. You spot a giggling Hermes behind a tree.",choices:[
+   {label:"Follow the backwards tracks",stat:"wit",dc:13,ok:{t:"You find the cattle hidden in a cave. Apollo is grateful.",fx:{favor:{apollo:1}}},
+     fail:{t:"You walk in circles all day.",fx:{}}},
+   {label:"Keep Hermes's secret",t:"Hermes winks and slips you a few coins.",fx:{gold:5,favor:{hermes:1}}}]},
+ forge:{title:"The Cyclops Forge",t:"Inside a volcano, Cyclops blacksmiths are making Zeus's thunderbolts. One of their bellows is broken.",choices:[
+   {label:"Pump the bellows for them",stat:"might",dc:12,ok:{t:"The fires roar back to life. They forge you a fine spearhead as thanks.",fx:{favor:{hephaestus:1},item:"spear"}},
+     fail:{t:"Too hot! You back away.",fx:{}}},
+   {label:"Watch and learn",t:"You learn a lot about bronze and fire.",fx:{train:{wit:1}}}]},
+ hind:{title:"The Golden-Horned Deer",t:"A deer with golden antlers and bronze hooves steps out of the forest. It belongs to Artemis.",choices:[
+   {label:"Let it go in peace",t:"The deer bows its head. Somewhere, Artemis smiles.",fx:{favor:{artemis:1}}},
+   {label:"Try to catch it",stat:"grace",dc:15,ok:{t:"You catch it, then let it go. Artemis is impressed by your speed but not thrilled.",fx:{train:{grace:2},favor:{artemis:-1}}},
+     fail:{t:"It's faster than the wind. Artemis is NOT happy you tried.",fx:{favor:{artemis:-1}}}}]},
+ oracle:{title:"A Visit to the Oracle",t:"The Oracle of Delphi breathes the sacred smoke and speaks in riddles.",choices:[
+   {label:"Ask about your future",t:"'The hero who keeps the gods' favor will not stand alone on the mountain.' Good to know.",fx:{favor:{apollo:1}}},
+   {label:"Ask where to find treasure",t:"'Under the third olive tree.' You dig. She was right!",fx:{gold:12}}]}
+};
+const MARKET = [
+  {k:"ambrosia",name:"Jar of Ambrosia",price:8,desc:"Food of the gods. Heals 2d6+3 HP in battle. Carry up to 3."},
+  {k:"shield",name:"Bronze Shield",price:25,desc:"+1 Armor, always."},
+  {k:"spear",name:"Spear of Corinth",price:25,desc:"+2 damage on Strike."},
+  {k:"charm",name:"Olive Charm",price:15,desc:"Reroll one failed choice roll each quest."}
+];
+
+/* ---------- more quests + legendary battles ---------- */
+Object.assign(QUESTS, {
+ pandora:{title:"Pandora's Jar",place:"A village in Argos",gods:["hephaestus","zeus"],tier:1,gold:20,len:4,start:"s1",
+  intro:"Pandora opened a jar she was told never to open, and all the troubles of the world flew out: sneezes, nightmares, grumpiness and worse. Hephaestus made that jar. Zeus wants the troubles caught before they spread.",
+  nodes:{
+   s1:{t:"Everyone in the village is arguing, sneezing and stubbing their toes. Pandora sits crying beside the empty jar.",next:"m",choices:[
+    {label:"Comfort Pandora and ask what flew out",stat:"wit",dc:11,
+      ok:{t:"She sniffles: 'The biggest Trouble went to hide in the old mill.'",set:"list",fx:{}},
+      fail:{t:"She's crying too hard to talk.",fx:{}}},
+    {label:"Patch the cracked jar",free:true,
+      ok:{t:"You fix it with clay and a little bronze. Hephaestus is impressed with your handiwork.",set:"jar",fx:{favor:{hephaestus:1}}}},
+    {label:"Chase the nearest Trouble",stat:"grace",dc:12,
+      ok:{t:"You catch a Grumpiness and squish it. The baker is so happy he pays you.",fx:{gold:5}},
+      fail:{t:"A Stubbed Toe gets you. OUCH.",fx:{hp:-3}}}
+   ]},
+   m:{fight:{name:"Swarm of Little Troubles",ref:"the swarm of Troubles",hp:10,ac:12,atk:3,dmg:[1,4,1],desc:"Buzzing pests: Sneezes, Hiccups and Stubbed Toes."},
+     win:{t:"You stuff them into a sack. One tiny glowing thing stays behind and floats next to you. It says its name is Hope.",set:"hope",fx:{}},next:"s2"},
+   s2:{t:"At the old mill, the Biggest Trouble is waiting: a shadowy cloud with angry eyes.",next:"b",choices:[
+    {label:"Sneak up where Pandora said it hides",free:true,need:"list",
+      ok:{t:"You come in through the back. Surprise!",fx:{boss:{hp:-5}}}},
+    {label:"Trap part of it in the patched jar",stat:"wit",dc:12,need:"jar",
+      ok:{t:"Half the cloud gets sucked into the jar. Lid on!",fx:{boss:{hp:-8}}},
+      fail:{t:"It slips out of the jar like smoke.",fx:{}}},
+    {label:"Let Hope shine on it",free:true,need:"hope",
+      ok:{t:"Troubles HATE Hope. The cloud shrinks back, scared.",fx:{boss:{atk:-2}}}},
+    {label:"Ask Zeus for a gust of wind",free:true,
+      ok:{t:"Whoosh! Zeus blows the dust off the mill.",fx:{favor:{zeus:1}}}}
+   ]},
+   b:{fight:{name:"The Great Trouble",ref:"the Great Trouble",hp:20,ac:13,atk:4,dmg:[1,6,2],desc:"Every bad day in the world, rolled into one cloud."},next:"end",boss:true}
+  }},
+
+ boar:{title:"The Erymanthian Boar",place:"Mount Erymanthos",gods:["artemis","aphrodite"],tier:1,gold:20,len:4,start:"s1",
+  intro:"A giant boar is tearing up the snowy slopes of Mount Erymanthos. Artemis wants it caught alive. Aphrodite wants it gone forever: a boar once hurt someone she loved.",
+  nodes:{
+   s1:{t:"On the way up the mountain you meet Pholus, a friendly centaur, who invites you to dinner.",next:"m",choices:[
+    {label:"Share dinner and ask for advice",free:true,
+      ok:{t:"Pholus munches a carrot. 'Chase it into the deep snow. Its little legs get stuck!'",set:"pholus",fx:{hp:3}}},
+    {label:"Thank him but keep climbing before dark",stat:"might",dc:12,
+      ok:{t:"You reach the snowline quickly.",fx:{}},
+      fail:{t:"You slip on the ice.",fx:{hp:-3}}},
+    {label:"Open Pholus's special honey drink",free:true,
+      ok:{t:"Delicious! But uh oh... every centaur on the mountain can smell it.",fx:{ambrosia:1}}}
+   ]},
+   m:{fight:{name:"Rowdy Centaurs",ref:"the rowdy centaurs",hp:12,ac:12,atk:4,dmg:[1,6,0],desc:"They smelled dinner and want some."},
+     win:{t:"The centaurs gallop off, grumbling. One left a big rope net behind.",set:"net",fx:{}},next:"s2"},
+   s2:{t:"Fresh tracks in the snow. The boar is huge, with tusks like curved swords.",next:"b",choices:[
+    {label:"Chase it into the deep snow",free:true,need:"pholus",
+      ok:{t:"Just like Pholus said. It's stuck up to its belly!",fx:{boss:{ac:-3,atk:-1}}}},
+    {label:"Throw the centaurs' net",stat:"grace",dc:11,need:"net",
+      ok:{t:"Got it! It thrashes inside the net.",fx:{boss:{atk:-2,hp:-3}}},
+      fail:{t:"The net lands on a bush.",fx:{}}},
+    {label:"Promise Artemis you'll take it alive",free:true,
+      ok:{t:"Artemis smiles from the treetops.",fx:{favor:{artemis:1}}}},
+    {label:"Promise Aphrodite it will never hurt anyone again",free:true,
+      ok:{t:"A warm breeze, in the middle of the snow. Aphrodite is grateful.",fx:{favor:{aphrodite:1}}}}
+   ]},
+   b:{fight:{name:"Erymanthian Boar",ref:"the boar",hp:20,ac:13,atk:4,dmg:[1,8,1],desc:"Tusks like curved swords."},next:"end",boss:true}
+  }},
+
+ scylla:{title:"Scylla and Charybdis",place:"The narrow strait",gods:["poseidon","hermes"],tier:2,gold:25,len:4,start:"s1",
+  intro:"To reach the western sea, ships must pass a narrow strait. On one side lives Scylla, a monster with six snapping heads. On the other is Charybdis, a whirlpool that swallows ships whole.",
+  nodes:{
+   s1:{t:"Your ship enters the strait. On the left, a cliff with a dark cave. On the right, the water starts to spin.",next:"m",choices:[
+    {label:"Ask Hermes for the fastest route",free:true,
+      ok:{t:"Hermes whispers: 'Hug the shadows under the cliff. Her heads can't see there.'",set:"route",fx:{favor:{hermes:1}}}},
+    {label:"Read the currents",stat:"wit",dc:12,
+      ok:{t:"You spot the calm lane between the two dangers.",fx:{boss:{atk:-1}}},
+      fail:{t:"The ship lurches toward the whirlpool!",fx:{hp:-3}}},
+    {label:"Row with all your strength",stat:"might",dc:13,
+      ok:{t:"Your oar cuts the water like a blade. Poseidon approves.",fx:{favor:{poseidon:1}}},
+      fail:{t:"The oar snaps and smacks you.",fx:{hp:-4}}}
+   ]},
+   m:{fight:{name:"Whirlpool Eels",ref:"the whirlpool eels",hp:12,ac:12,atk:4,dmg:[1,6,0],desc:"Slippery eels spun out of Charybdis."},
+     win:{t:"Your ship slips past the whirlpool. Now for the cliff...",fx:{}},next:"s2"},
+   s2:{t:"Six long necks snake down from the cave. Each head has three rows of teeth.",next:"b",choices:[
+    {label:"Take Hermes' shadow route",free:true,need:"route",
+      ok:{t:"You slide right under her heads and strike from below!",fx:{boss:{hp:-6}}}},
+    {label:"Wave six torches at once",stat:"grace",dc:13,
+      ok:{t:"Six heads, six torches. She doesn't know where to bite!",fx:{boss:{atk:-2}}},
+      fail:{t:"You drop four torches. One head bites your cloak.",fx:{hp:-4}}},
+    {label:"Toss a gift to Poseidon (5 drachmae)",free:true,cost:5,
+      ok:{t:"A big wave slams the cliff and knocks loose some of Scylla's rocks.",fx:{gold:-5,favor:{poseidon:1},boss:{ac:-2}}}}
+   ]},
+   b:{fight:{name:"Scylla",ref:"Scylla",hp:24,ac:13,atk:5,dmg:[1,8,1],desc:"Six heads, eighteen rows of teeth."},next:"end",boss:true}
+  }},
+
+ troy:{title:"The Wooden Horse",place:"The walls of Troy",gods:["athena","apollo"],tier:2,gold:28,len:4,start:"s1",
+  intro:"The Greeks have been stuck outside the walls of Troy for ten years. Athena has a clever idea involving a giant wooden horse. Apollo, protector of Troy, is not happy about it.",
+  nodes:{
+   s1:{t:"Odysseus hands you a hammer. 'Help us build the horse. Make it big enough to hide twenty soldiers.'",next:"m",choices:[
+    {label:"Design a secret trapdoor",stat:"wit",dc:13,
+      ok:{t:"A hidden hatch in the belly. Athena loves it.",set:"trapdoor",fx:{favor:{athena:1}}},
+      fail:{t:"Your trapdoor plan keeps falling apart.",fx:{}}},
+    {label:"Haul the giant logs",stat:"might",dc:13,
+      ok:{t:"You carry three logs at once. Odysseus pays you extra.",fx:{gold:6}},
+      fail:{t:"A log rolls onto your foot.",fx:{hp:-3}}},
+    {label:"Visit Apollo's temple to apologize first",free:true,
+      ok:{t:"'It's nothing personal,' you tell him. Apollo is a little less grumpy.",fx:{favor:{apollo:1}}}}
+   ]},
+   m:{fight:{name:"Trojan Scouts",ref:"the Trojan scouts",hp:12,ac:13,atk:4,dmg:[1,6,0],desc:"They spotted you building something suspicious."},
+     win:{t:"The scouts run back to the city, shouting about a big wooden horse. Perfect.",fx:{}},next:"s2"},
+   s2:{t:"The Trojans wheel the horse inside. A priest named Laocoön shouts 'Beware Greeks bearing gifts!' Then two giant sea serpents rise from the bay and slither toward him.",next:"b",choices:[
+    {label:"Slip out the trapdoor to save the priest",free:true,need:"trapdoor",
+      ok:{t:"You drop out of the horse and land right between the serpents and Laocoön.",fx:{boss:{hp:-6}}}},
+    {label:"Shout a warning and jump down",stat:"grace",dc:13,
+      ok:{t:"You land like a cat, sword ready.",fx:{boss:{atk:-2}}},
+      fail:{t:"You land like a sack of potatoes.",fx:{hp:-3}}},
+    {label:"Pray to Apollo to protect his priest",free:true,
+      ok:{t:"Golden light surrounds Laocoön. Apollo is grateful you care.",fx:{favor:{apollo:1}}}}
+   ]},
+   b:{fight:{name:"Twin Sea Serpents",ref:"the twin serpents",hp:24,ac:13,atk:5,dmg:[1,8,1],desc:"Two serpents, one very bad mood."},next:"end",boss:true}
+  }},
+
+ chariot:{title:"The Runaway Sun",place:"The burning sky",gods:["apollo","zeus"],tier:2,gold:25,len:4,start:"s1",
+  intro:"Phaethon, Apollo's son, borrowed the Sun Chariot without asking. Now the fire horses are running wild, too close to the earth, scorching fields and boiling rivers.",
+  nodes:{
+   s1:{t:"Below, the fields are burning. Above, the chariot zigzags across the sky.",next:"m",choices:[
+    {label:"Help the villagers fight the fires",stat:"might",dc:12,
+      ok:{t:"Bucket after bucket. The grateful farmers pay you.",fx:{gold:5}},
+      fail:{t:"Too much smoke. You cough and stumble.",fx:{hp:-3}}},
+    {label:"Work out where it will dip lowest",stat:"wit",dc:13,
+      ok:{t:"It swoops low over the same hill every loop. You'll wait there.",set:"path",fx:{}},
+      fail:{t:"Its path makes no sense at all.",fx:{}}},
+    {label:"Climb the tallest mountain",stat:"grace",dc:13,
+      ok:{t:"From the summit you can almost touch the clouds.",fx:{boss:{hp:-3}}},
+      fail:{t:"Loose rocks and a long slide down.",fx:{hp:-4}}}
+   ]},
+   m:{fight:{name:"Fire Salamanders",ref:"the fire salamanders",hp:12,ac:12,atk:4,dmg:[1,6,0],desc:"Lizards made of flame, born in the burning grass."},
+     win:{t:"In their nest you find a cloak that doesn't burn.",set:"cloak",fx:{}},next:"s2"},
+   s2:{t:"The chariot roars past, close enough to touch. Phaethon is screaming. The horses are pure fire.",next:"b",choices:[
+    {label:"Wait on the hill where it dips lowest",free:true,need:"path",
+      ok:{t:"Right on time! You leap aboard.",fx:{boss:{hp:-6}}}},
+    {label:"Wrap yourself in the fireproof cloak",free:true,need:"cloak",
+      ok:{t:"The flames can't touch you.",fx:{boss:{atk:-3}}}},
+    {label:"Ask Zeus to strike the chariot",free:true,
+      ok:{t:"Zeus will stop it his way. Apollo gasps: 'Careful with my son!'",fx:{favor:{zeus:1,apollo:-1},boss:{hp:-6}}}}
+   ]},
+   b:{fight:{name:"Runaway Sun Horses",ref:"the sun horses",hp:24,ac:14,atk:5,dmg:[1,8,1],desc:"Four horses made of living fire."},next:"end",boss:true}
+  }},
+
+ diomedes:{title:"The Wild Mares",place:"Thrace",gods:["ares","poseidon"],tier:3,gold:30,len:4,start:"s1",
+  intro:"Cruel King Diomedes, a son of Ares, keeps four wild mares chained and half-starved. Free the poor horses and stop the king. Poseidon, maker of horses, is watching. So is Ares.",
+  nodes:{
+   s1:{t:"The king's stables are guarded day and night.",next:"m",choices:[
+    {label:"Pay a stable boy to leave a gate open (8 drachmae)",free:true,cost:8,
+      ok:{t:"He winks and pockets the coins.",set:"gate",fx:{gold:-8}}},
+    {label:"Climb the stable wall at night",stat:"grace",dc:14,
+      ok:{t:"Over the wall and you unlatch the gate from the inside.",set:"gate",fx:{}},
+      fail:{t:"You fall into a water trough. Loudly.",fx:{hp:-4}}},
+    {label:"Kick down the front gate",stat:"might",dc:15,
+      ok:{t:"BOOM. Ares can't help admiring that.",fx:{favor:{ares:1}}},
+      fail:{t:"The gate wins.",fx:{hp:-5}}}
+   ]},
+   m:{fight:{name:"Bistones Warriors",ref:"the Bistones warriors",hp:15,ac:14,atk:5,dmg:[1,6,1],desc:"The king's fierce bodyguards."},
+     win:{t:"In their camp you find a sack of sweet oats. The mares have never tasted real food.",set:"oats",fx:{}},next:"s2"},
+   s2:{t:"Four mares with wild eyes rear up in their stalls. King Diomedes laughs from the balcony.",next:"b",choices:[
+    {label:"Feed the mares real oats",free:true,need:"oats",
+      ok:{t:"They calm down at once and nuzzle you. Now the king has no one to fight for him.",fx:{boss:{hp:-8,atk:-1}}}},
+    {label:"Open every gate and set them free",free:true,need:"gate",
+      ok:{t:"The mares gallop out to the green fields. Poseidon is overjoyed.",fx:{favor:{poseidon:2}}}},
+    {label:"Challenge the son of Ares to a duel",free:true,
+      ok:{t:"'A duel!' says Ares. 'Now THAT I want to watch.'",fx:{favor:{ares:1}}}}
+   ]},
+   b:{fight:{name:"King Diomedes",ref:"King Diomedes",hp:26,ac:15,atk:5,dmg:[1,10,1],desc:"Son of Ares. Mean as a hornet."},next:"end",boss:true}
+  }},
+
+ antaeus:{title:"The Unbeatable Wrestler",place:"Libya",gods:["hermes","hades"],tier:3,gold:30,len:4,start:"s1",
+  intro:"The giant Antaeus challenges every traveler to a wrestling match, and he never loses. His secret: while his feet touch the ground, his mother Gaia, the Earth, keeps making him stronger.",
+  nodes:{
+   s1:{t:"Antaeus's arena is decorated with the helmets of heroes he has beaten.",next:"m",choices:[
+    {label:"Ask the old arena keeper for his secret",stat:"wit",dc:13,
+      ok:{t:"The keeper whispers: 'Lift him off the ground, and he's no stronger than you.'",set:"secret",fx:{}},
+      fail:{t:"'Secret? What secret?' He looks nervous.",fx:{}}},
+    {label:"Train hard all morning",stat:"might",dc:12,
+      ok:{t:"Hermes, god of athletes, cheers you on.",fx:{favor:{hermes:1}}},
+      fail:{t:"You pull a muscle.",fx:{hp:-2}}},
+    {label:"Honor the fallen heroes",free:true,
+      ok:{t:"You say their names. Hades will make sure they rest well.",fx:{favor:{hades:1}}}}
+   ]},
+   m:{fight:{name:"Sand Giant",ref:"the sand giant",hp:15,ac:14,atk:5,dmg:[1,6,1],desc:"Antaeus's warm-up partner, made of packed sand."},
+     win:{t:"The sand giant crumbles. The crowd goes wild.",fx:{gold:5}},next:"s2"},
+   s2:{t:"Antaeus steps in. Every time he stomps, the ground glows green.",next:"b",choices:[
+    {label:"Lift him off the ground!",stat:"might",dc:13,need:"secret",
+      ok:{t:"His feet leave the dirt and all his extra strength drains away!",fx:{boss:{hp:-10,ac:-2}}},
+      fail:{t:"He's too heavy... for now.",fx:{hp:-4}}},
+    {label:"Lure him onto a wooden platform",stat:"wit",dc:14,
+      ok:{t:"Wood isn't earth. Gaia can't help him there.",fx:{boss:{atk:-2}}},
+      fail:{t:"He won't step on it.",fx:{}}},
+    {label:"Dodge until he gets tired",stat:"grace",dc:13,
+      ok:{t:"Around and around. He's huffing and puffing.",fx:{boss:{hp:-4}}},
+      fail:{t:"He catches you in a bear hug.",fx:{hp:-4}}}
+   ]},
+   b:{fight:{name:"Antaeus",ref:"Antaeus",hp:28,ac:14,atk:6,dmg:[1,8,2],desc:"Son of the Earth. Never lost a match."},next:"end",boss:true}
+  }},
+
+ arachne:{title:"The Weaver's Web",place:"Lydia",gods:["athena","aphrodite"],tier:3,gold:30,len:4,start:"s1",
+  intro:"Arachne was the best weaver in Greece, until she boasted she was better than Athena and got turned into a spider. Now she's a GIANT spider, weaving webs over whole villages. Athena wants her stopped. Aphrodite feels sorry for her.",
+  nodes:{
+   s1:{t:"Sticky threads stretch between the olive trees. A whole village is wrapped up like birthday presents.",next:"m",choices:[
+    {label:"Cut the villagers free",stat:"grace",dc:13,
+      ok:{t:"Snip, snip. The villagers hug you and promise to help.",set:"village",fx:{gold:6}},
+      fail:{t:"Now YOU'RE stuck too. It takes an hour to get out.",fx:{hp:-3}}},
+    {label:"Study the web's pattern",stat:"wit",dc:13,
+      ok:{t:"Every web has a weak thread. Now you know where hers is.",fx:{boss:{ac:-2}}},
+      fail:{t:"It's beautiful, and very confusing.",fx:{}}},
+    {label:"Ask Athena for her loom shuttle",free:true,
+      ok:{t:"A silver shuttle appears in your hand. Athena is with you.",fx:{favor:{athena:1}}}}
+   ]},
+   m:{fight:{name:"Spiderlings",ref:"the spiderlings",hp:14,ac:13,atk:4,dmg:[1,6,1],desc:"Arachne's children. Each one is as big as a dog."},
+     win:{t:"They scatter into the cracks in the walls.",fx:{}},next:"s2"},
+   s2:{t:"Arachne hangs from her web, eight eyes glowing. 'Did Athena send you? Is she still angry with me?'",next:"b",choices:[
+    {label:"Challenge her to a weaving contest",stat:"grace",dc:15,
+      ok:{t:"You weave the best tapestry of your life. Arachne bows: 'You beat me fairly.' She gives up without a fight!",fx:{skip:true}},
+      fail:{t:"Your tapestry looks like a tangled fishing net. She laughs and attacks.",fx:{hp:-3}}},
+    {label:"Tell her Aphrodite thinks she deserves kindness",free:true,
+      ok:{t:"Arachne hesitates. Some of her anger fades.",fx:{favor:{aphrodite:1},boss:{atk:-2}}}},
+    {label:"Signal the villagers you freed",free:true,need:"village",
+      ok:{t:"They pour olive oil all over her web. Slippery!",fx:{boss:{hp:-7}}}}
+   ]},
+   b:{fight:{name:"Arachne",ref:"Arachne",hp:26,ac:14,atk:5,dmg:[1,8,1],desc:"Eight legs, eight eyes, one big grudge."},next:"end",boss:true}
+  }},
+
+ /* ---------- legendary battles ---------- */
+ hydra:{title:"The Hydra of Lerna",place:"The swamps of Lerna",gods:[],tier:1,gold:35,legend:true,len:5,start:"s1",
+  intro:"The first great monster Eris has woken: the Hydra, a nine-headed serpent with poison breath. Cut off one head and two grow back. It is crawling toward the villages.",
+  nodes:{
+   s1:{t:"At the edge of the swamp, a young charioteer named Iolaus waves to you. 'I'm good with fire,' he says. 'Want some help?'",next:"m",choices:[
+    {label:"Bring Iolaus and his torch",free:true,
+      ok:{t:"'When you cut off a head, I'll burn the neck so it can't grow back,' he grins.",set:"torch",fx:{}}},
+    {label:"Make a cloth mask against the poison",stat:"wit",dc:12,
+      ok:{t:"Smart! The poison breath won't hurt you as much.",fx:{boss:{atk:-2}}},
+      fail:{t:"The mask keeps falling off.",fx:{hp:-3}}},
+    {label:"Shoot flaming arrows to lure it out",stat:"grace",dc:13,
+      ok:{t:"It comes out hissing and already singed.",fx:{boss:{hp:-6}}},
+      fail:{t:"An arrow lands in your own boot.",fx:{hp:-3}}}
+   ]},
+   m:{fight:{name:"Giant Crab",ref:"the giant crab",hp:16,ac:13,atk:4,dmg:[1,6,1],desc:"The Hydra's friend. It pinches."},
+     win:{t:"Crunch. The swamp goes quiet. Too quiet.",fx:{}},next:"s2"},
+   s2:{t:"Bubbles rise from the mud. Then nine heads rise with them.",next:"aid",choices:[
+    {label:"Dig a ditch so it can't escape",stat:"might",dc:12,
+      ok:{t:"It's trapped in the mud pit with you.",fx:{boss:{hp:-3,atk:-1}}},
+      fail:{t:"The ditch fills with swamp water. Gross.",fx:{hp:-2}}},
+    {label:"Find the one head that never dies",stat:"wit",dc:14,
+      ok:{t:"The middle head, with golden eyes. You aim there.",fx:{boss:{hp:-8}}},
+      fail:{t:"All nine heads look the same to you.",fx:{}}},
+    {label:"Eat and rest before the battle",free:true,
+      ok:{t:"You'll need your strength.",fx:{hp:6}}}
+   ]},
+   aid:{aid:true,next:"b"},
+   b:{fight:{name:"Lernaean Hydra",ref:"the Hydra",hp:52,ac:14,atk:6,dmg:[1,8,2],desc:"Nine heads. Cut one off and two grow back.",regen:3,regenOff:"torch"},next:"end",boss:true}
+  }},
+
+ chimera:{title:"The Chimera",place:"The burning hills of Lycia",gods:[],tier:2,gold:40,legend:true,len:5,start:"s1",
+  intro:"The Chimera has a lion's head, a goat's head on its back, and a snake for a tail. It breathes fire hot enough to melt bronze. Eris sent it to burn the kingdom of Lycia.",
+  nodes:{
+   s1:{t:"Prince Bellerophon wants to help you. 'If only I could ride the winged horse Pegasus,' he sighs.",next:"m",choices:[
+    {label:"Ask Athena for her golden bridle",free:true,
+      ok:{t:"A golden bridle drops from the sky. Pegasus lets Bellerophon ride, and he'll fly you into battle.",set:"pegasus",fx:{favor:{athena:1}}}},
+    {label:"Melt a lump of lead onto a spear tip",stat:"wit",dc:13,
+      ok:{t:"Hephaestus taught the old smiths this trick: lead melts in fire breath.",set:"lead",fx:{}},
+      fail:{t:"Hot lead on your fingers. Yowch.",fx:{hp:-3}}},
+    {label:"Soak shields in the river",stat:"might",dc:12,
+      ok:{t:"Wet shields steam instead of burning.",fx:{boss:{atk:-1}}},
+      fail:{t:"You drop a shield in the river and nearly go after it.",fx:{hp:-2}}}
+   ]},
+   m:{fight:{name:"Burning Wolves",ref:"the burning wolves",hp:24,ac:14,atk:6,dmg:[1,8,1],desc:"Wolves with smoking fur, running ahead of the Chimera."},
+     win:{t:"The wolves flee into the smoke. A great roar shakes the hills.",fx:{}},next:"s2"},
+   s2:{t:"The Chimera bursts out of a burning forest, roaring from three mouths at once.",next:"aid",choices:[
+    {label:"Throw the lead-tipped spear into its mouth",free:true,need:"lead",
+      ok:{t:"The lead melts in its throat. It coughs smoke but can't breathe fire anymore!",set:"nobreath",fx:{boss:{hp:-5}}}},
+    {label:"Fly above it on Pegasus",free:true,need:"pegasus",
+      ok:{t:"Its fire can't reach you up here. You dive and strike!",fx:{boss:{hp:-6,atk:-1}}}},
+    {label:"Jump in the river first",free:true,
+      ok:{t:"Soaking wet means less burning.",fx:{hp:6}}},
+    {label:"Charge straight at the lion head",stat:"might",dc:14,
+      ok:{t:"A mighty blow right on the nose!",fx:{boss:{hp:-7}}},
+      fail:{t:"The goat head headbutts you.",fx:{hp:-5}}}
+   ]},
+   aid:{aid:true,next:"b"},
+   b:{fight:{name:"Chimera",ref:"the Chimera",hp:78,ac:15,atk:7,dmg:[1,10,2],desc:"Lion, goat and serpent. All three are angry.",enrage:{atk:2,off:"pegasus"},
+       breath:{every:3,dmg:[4,6,2],name:"breathes a river of fire",off:"nobreath"}},next:"end",boss:true}
+  }},
+
+ echidna:{title:"Mother of Monsters",place:"Echidna's cave",gods:["hades","artemis"],tier:3,gold:35,len:4,start:"s1",
+  intro:"Echidna, the Mother of Monsters, is furious. The Hydra, the Chimera, Cerberus... heroes have been beating her children one by one. She has left her cave to face you herself.",
+  nodes:{
+   s1:{t:"Her cave is full of monster toys: chewed shields and broken swords. Somewhere in the dark, something small is crying.",next:"m",choices:[
+    {label:"Follow the crying",stat:"grace",dc:13,
+      ok:{t:"A tiny lost Chimera cub, stuck between two rocks. You free it and carry it carefully.",set:"pup",fx:{}},
+      fail:{t:"You stumble through the dark and bang your head.",fx:{hp:-3}}},
+    {label:"Set traps at the entrance",stat:"wit",dc:14,
+      ok:{t:"When she comes home, she'll get a nasty surprise.",fx:{boss:{hp:-8}}},
+      fail:{t:"You nearly trap yourself.",fx:{}}},
+    {label:"Rest before she returns",free:true,
+      ok:{t:"You eat and catch your breath.",fx:{hp:6}}}
+   ]},
+   m:{fight:{name:"Orthrus",ref:"Orthrus",hp:18,ac:14,atk:5,dmg:[1,8,0],desc:"Cerberus's little brother. Only two heads, but twice as grumpy."},
+     win:{t:"Orthrus whimpers and runs to hide. Then the whole cave shakes.",fx:{}},next:"s2"},
+   s2:{t:"Echidna rises before you: half woman, half giant serpent, eyes blazing with anger.",next:"b",choices:[
+    {label:"Give back her lost cub",free:true,need:"pup",
+      ok:{t:"Echidna freezes. She takes the cub gently. She still fights you, but her rage is gone.",set:"calm",fx:{boss:{atk:-1}}}},
+    {label:"Tell her Eris tricked everyone",stat:"wit",dc:14,
+      ok:{t:"'Eris?' she hisses. 'She used my children?' She'll remember this when Typhon rises.",setG:"echidnaKnows",fx:{boss:{atk:-2}}},
+      fail:{t:"She's too angry to listen.",fx:{}}},
+    {label:"Strike first",stat:"might",dc:14,
+      ok:{t:"A huge blow before she can coil around you.",fx:{boss:{hp:-8}}},
+      fail:{t:"Her tail sweeps your legs.",fx:{hp:-5}}}
+   ]},
+   b:{fight:{name:"Echidna",ref:"Echidna",hp:40,ac:14,atk:5,dmg:[1,8,2],desc:"Mother of the Hydra, the Chimera and Cerberus.",enrage:{atk:3,off:"calm"}},next:"end",boss:true}
+  }}
+});
+
+/* ---------- state ---------- */
+const KEY = "favor-olympus-v4";
+let S = null;
+const UI = {hero:"lykos", name:"", confirmReset:false, saved:null};
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+function load(){ try{ const t = localStorage.getItem(KEY); const o = t ? JSON.parse(t) : null; return o && o.v === 4 ? o : null; }catch(e){ return null; } }
+function wipe(){ try{ localStorage.removeItem(KEY); }catch(e){} if (Cloud.ref) Cloud.ref.delete().catch(()=>{}); Cloud.saved = null; }
+
+/* ---------- saving to the player's Claude account ---------- */
+const Cloud = {ref:null, saved:null, checked:false};
+let cloudBusy = false, cloudAgain = false;
+function setSaveMsg(t){ UI.saveMsg = t; const el = document.getElementById("saveMsg"); if (el) el.textContent = t; }
+async function cloudSave(manual){
+  if (!S) return;
+  S.savedAt = Date.now(); save();
+  if (!Cloud.ref){
+    if (manual) setSaveMsg(Cloud.checked ? "Saved on this device only (sign in to claude.ai to save to your account)" : "Saved on this device");
+    return;
+  }
+  if (cloudBusy){ cloudAgain = true; return; }
+  cloudBusy = true;
+  if (manual) setSaveMsg("Saving…");
+  try {
+    await Cloud.ref.set({state: JSON.stringify(S), day: S.day, hero: S.hero.name, savedAt: S.savedAt});
+    setSaveMsg(`Saved · Day ${S.day}`);
+  } catch(e){
+    setSaveMsg(e && e.code === "quota_exceeded" ? "Your account save is full. Saved on this device." : "Couldn't reach your account. Saved on this device.");
+  }
+  cloudBusy = false;
+  if (cloudAgain){ cloudAgain = false; cloudSave(false); }
+}
+async function cloudInit(){
+  try {
+    for (let i=0; i<20 && !(window.claude && window.claude.use); i++) await new Promise(r => setTimeout(r, 250));
+    if (!(window.claude && window.claude.use)) return;
+    const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+    if (!db || !user) return;
+    const id = await user.id();
+    if (!id) return;
+    const ref = db.doc("data/users/" + id + "/game");
+    const snap = await Promise.race([ref.get(), new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 10000))]);
+    Cloud.ref = ref;
+    if (snap.exists){
+      try { const o = JSON.parse(snap.data().state); if (o && o.v === 4) Cloud.saved = o; } catch(e){}
+    }
+  } catch(e){ /* no account saving in this view */ }
+  finally {
+    Cloud.checked = true;
+    if (!S){
+      const local = UI.saved;
+      if (Cloud.saved && (!local || (Cloud.saved.savedAt||0) >= (local.savedAt||0))) UI.saved = Cloud.saved;
+      render();
+    } else if (Cloud.ref) setSaveMsg("Account saving on");
+  }
+}
+
+const d = n => 1 + Math.floor(Math.random()*n);
+const roll = (c,s) => { let t=0; for(let i=0;i<c;i++) t+=d(s); return t; };
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const sgn = n => (n>=0 ? "+ " : "− ") + Math.abs(n);
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const gstyle = k => `style="--gc:${GODS[k].c}"`;
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+const seg = () => SEGS[Math.min(S.seg, SEGS.length-1)];
+const qDays = id => { const Q = QUESTS[id]; return Q.legend || Q.final ? 1 : Q.tier >= 3 ? 3 : 2; };
+const legendDue = () => S.day >= seg().end;
+const daysLeft = () => seg().end - S.day;
+function pickBoard(){
+  const G = seg();
+  if (legendDue()) return [G.legend];
+  const hi = Math.max(...G.tiers);
+  const open = POOL.filter(id => !S.done.includes(id) && G.tiers.includes(QUESTS[id].tier));
+  const top = shuffle(open.filter(id => QUESTS[id].tier === hi)).slice(0,2);
+  const rest = shuffle(open.filter(id => !top.includes(id)));
+  return top.concat(rest).slice(0,3).sort((a,b) => QUESTS[a].tier - QUESTS[b].tier);
+}
+function newGame(key, name){
+  const h = HEROES[key];
+  const favor = {}; GOD_KEYS.forEach(k => favor[k] = 2);
+  favor[h.patron] = 3;
+  S = {v:4, seg:0, pendingEv:null, screen:"hub", day:1, offered:false, done:[], notes:[], curse:null, q:null, ev:null, flags:{}, favor,
+    train:{might:0,wit:0,grace:0}, encSeen:[],
+    hero:{key, name:name || h.name, cls:h.cls, might:h.might, wit:h.wit, grace:h.grace, maxHp:h.hp, hp:h.hp, ac:h.ac,
+          gold:h.gold, ambrosia:h.ambrosia, shield:!!h.shield, spear:false, charm:!!h.charm}};
+  S.board = pickBoard();
+  S.notes = [{calm:true, t:`At a great feast on Olympus, an uninvited guest rolled a golden apple onto the table. Now the gods are quarreling, and while they argue, the monsters of Greece are waking up. The Oracle of Delphi has chosen you, ${S.hero.name}. You have ${TOTAL_DAYS} days. The Hydra will attack on day 15, the Chimera on day 30, and on day 45 Typhon will climb Mount Olympus. Use every day well.`}];
+  save();
+}
+const CURSE_TXT = {startHp:n=>`start with −${n} HP`, mightPen:n=>`−${n} on Might rolls`, witPen:n=>`−${n} on Wit rolls`,
+  gracePen:n=>`−${n} on Grace rolls`, atkPen:n=>`−${n} on attack rolls`, acPen:n=>`−${n} Armor`};
+const STORY_DAYS = [["ev1", () => S.seg >= 1], ["ev2", () => S.seg >= 1 && S.day >= 23], ["ev3", () => S.seg >= 2 && S.day >= 38]];
+function newDay(notes, days){
+  S.day += (days || 1); S.offered = false; S.q = null; S.ev = null; S.screen = "hub";
+  S.hero.hp = S.hero.maxHp;
+  S.notes = notes || [];
+  GOD_KEYS.forEach(k => {
+    if (S.favor[k] === 0){
+      const w = GODS[k].wrath;
+      if (w.gold) S.hero.gold = Math.max(0, S.hero.gold + w.gold);
+      if (w.ambrosia) S.hero.ambrosia = Math.max(0, S.hero.ambrosia + w.ambrosia);
+      Object.keys(CURSE_TXT).forEach(f => { if (w[f]){ S.curse = S.curse || {}; S.curse[f] = (S.curse[f]||0) + w[f]; } });
+      S.favor[k] = 1;
+      S.notes.push({t: w.t + ` ${GODS[k].name}'s anger cools to 1 favor.`});
+    }
+  });
+  const left = daysLeft();
+  if (left <= 0) S.notes.push({t:`${cap(seg().foe)} is here! There's no time for anything else. Today you must face it.`});
+  else if (left <= 3) S.notes.push({calm:true, t:`The Oracle warns: ${seg().foe} arrives in ${left} day${left>1?"s":""}. Get ready!`});
+  S.board = pickBoard();
+  setTimeout(() => cloudSave(false), 0);
+  const ev = STORY_DAYS.find(([id, ok]) => !S.flags[id] && ok() && !legendDue());
+  if (ev){ S.screen = "event"; S.ev = {id:ev[0], kind:"story", res:null}; }
+  save();
+}
+function trainStat(stat, n){
+  const msgs = [];
+  for (let i=0;i<n;i++){
+    if (S.hero[stat] >= 5) break;
+    S.train[stat]++;
+    if (S.train[stat] >= 3){ S.train[stat] = 0; S.hero[stat]++; msgs.push(`${STAT[stat]} rises to ${S.hero[stat]}!`); }
+  }
+  return msgs;
+}
+
+/* ---------- effects ---------- */
+function hasFlag(f){
+  if (f === "hasAmbrosia") return S.hero.ambrosia > 0;
+  if (f === "noShield") return !S.hero.shield;
+  return !!((S.q && S.q.flags[f]) || S.flags[f]);
+}
+function applyFx(fx){
+  if (!fx) return;
+  const h = S.hero, q = S.q;
+  if (fx.hp) h.hp = clamp(h.hp + fx.hp, 1, Math.max(h.maxHp, h.hp));
+  if (fx.gold) h.gold = Math.max(0, h.gold + fx.gold);
+  if (fx.ambrosia) h.ambrosia = clamp(h.ambrosia + fx.ambrosia, 0, 3);
+  if (fx.favor) for (const k in fx.favor) S.favor[k] = clamp(S.favor[k] + fx.favor[k], 0, 5);
+  if (fx.boss && q) ["hp","ac","atk"].forEach(f => { if (fx.boss[f]) q.mods[f] = (q.mods[f]||0) + fx.boss[f]; });
+  if (fx.skip && q) q.skip = true;
+  if (fx.item) h[fx.item] = true;
+  if (fx.train) for (const k in fx.train) (S.trainMsgs = S.trainMsgs || []).push(...trainStat(k, fx.train[k]));
+}
+function applyOutcome(o){
+  if (!o) return;
+  applyFx(o.fx);
+  if (o.set) S.q.flags[o.set] = true;
+  if (o.setG) S.flags[o.setG] = true;
+}
+function fxChips(fx, foeName, extra){
+  const out = [];
+  if (fx){
+    if (fx.hp) out.push([fx.hp>0, `${fx.hp>0?"+":"−"}${Math.abs(fx.hp)} HP`]);
+    if (fx.gold) out.push([fx.gold>0, `${fx.gold>0?"+":"−"}${Math.abs(fx.gold)} drachmae`]);
+    if (fx.ambrosia) out.push([fx.ambrosia>0, `${fx.ambrosia>0?"+":"−"}${Math.abs(fx.ambrosia)} ambrosia`]);
+    if (fx.favor) for (const k in fx.favor) out.push([fx.favor[k]>0, `${GODS[k].name} ${fx.favor[k]>0?"+":"−"}${Math.abs(fx.favor[k])} favor`]);
+    if (fx.boss){
+      if (fx.boss.hp) out.push([true, `${foeName} −${Math.abs(fx.boss.hp)} HP`]);
+      if (fx.boss.ac) out.push([true, `${foeName} Armor −${Math.abs(fx.boss.ac)}`]);
+      if (fx.boss.atk) out.push([true, `${foeName} attack −${Math.abs(fx.boss.atk)}`]);
+    }
+    if (fx.skip) out.push([true, `Got past ${foeName} without a fight!`]);
+    if (fx.item) out.push([true, fx.item === "shield" ? "Bronze Shield" : "Spear of Corinth"]);
+    if (fx.train) for (const k in fx.train) out.push([true, `+${fx.train[k]} ${STAT[k]} training`]);
+  }
+  if (extra) out.push([true, extra]);
+  if (!out.length) return "";
+  return `<div class="chips">${out.map(([g,t]) => `<span class="chip ${g?"good":"bad"}">${t}</span>`).join("")}</div>`;
+}
+function nextFoe(qid, from){
+  const N = QUESTS[qid].nodes; let id = from, guard = 0;
+  while (id && id !== "end" && guard++ < 20){ if (N[id].fight) return N[id].fight.name; id = N[id].next; }
+  return "the enemy";
+}
+
+/* ---------- quest flow ---------- */
+function startQuest(id){
+  const Q0 = QUESTS[id];
+  if (!(Q0.legend || Q0.final) && (legendDue() || S.day + qDays(id) > seg().end)) return;
+  S.q = {id, node:null, step:0, phase:"scene", flags:{}, mods:{}, used:[], bless:null, result:null, boss:null,
+    log:[], aegis:0, fury:0, stun:false, stunCd:false, charmUsed:false, revive:false, skip:false,
+    curse:S.curse, flash:null, aid:null, aidBuff:null, wins:[], lastSkipped:false};
+  if (S.curse && S.curse.startHp) S.hero.hp = Math.max(1, S.hero.hp - S.curse.startHp);
+  S.curse = null;
+  S.screen = "quest";
+  goTo(QUESTS[id].start);
+  save(); render(); window.scrollTo(0,0);
+}
+function goTo(id){
+  const q = S.q;
+  if (id === "end"){ victory(); return; }
+  const n = QUESTS[q.id].nodes[id];
+  q.node = id; q.step++;
+  if (n.choices){ q.phase = "scene"; return; }
+  if (n.aid){ buildAid(); q.phase = "aid"; return; }
+  if (n.fight){
+    if (q.skip){ q.skip = false; q.mods = {}; q.lastSkipped = true; q.wonInfo = {skipped:true, name:n.fight.name}; q.phase = "won"; return; }
+    startFight(n);
+  }
+}
+function startFight(n){
+  const q = S.q, f = n.fight;
+  let extra = 0;
+  if (n.hpIf) for (const fl in n.hpIf) if (S.flags[fl]) extra += n.hpIf[fl];
+  q.boss = {...f, maxHp: f.hp + extra, ac: f.ac + (q.mods.ac||0), atk: f.atk + (q.mods.atk||0), mini: !n.boss};
+  const Qf = QUESTS[q.id], losses = (S.losses && S.losses[q.id]) || 0;
+  if ((Qf.legend || Qf.final) && n.boss && losses){ const cut = Math.round(q.boss.maxHp * (1 - 0.1*Math.min(losses,6))); q.boss.maxHp = losses <= 2 ? Math.max(LEGEND_FLOOR[q.id]||0, cut) : cut; if (losses >= 3){ q.boss.atk -= 1; } q.wounded = losses; }
+  if (!Qf.legend && !Qf.final && S.seg > 0){
+    const k = S.seg; q.boss.maxHp += (n.boss ? 4 : 2)*k; q.boss.atk += k; q.boss.dmg = [q.boss.dmg[0], q.boss.dmg[1], q.boss.dmg[2]+Math.floor(k/2)];
+  }
+  q.boss.hp = Math.max(4, q.boss.maxHp + (q.mods.hp||0));
+  q.mods = {}; q.aegis = 0; q.fury = 0; q.stun = false; q.stunCd = false; q.lastSkipped = false; q.turn = 0; q.burned = false;
+  if (q.aidBuff){
+    const a = q.aidBuff; q.boss.hp = Math.max(Math.round(q.boss.maxHp*0.5), q.boss.hp - a.hp); q.boss.atk -= a.atk;
+    q.aegis = a.aegis; q.fury = a.fury; q.stun = a.stun; q.revive = a.revive; q.aidBuff = null;
+  }
+  q.phase = "combat";
+  q.log = [{k:"sys", t: f.name === "Typhon" ? "Typhon roars with a hundred voices. The final battle begins!"
+    : QUESTS[q.id].legend && n.boss ? `${cap(f.ref)} rises! A legendary battle begins.`
+    : `${cap(f.ref)} ${q.boss.mini ? "blocks your path" : "attacks"}! Choose your move.`}];
+}
+const pen = (q, f) => (q.curse && q.curse[f]) || 0;
+const statPen = (q, stat) => pen(q, stat + "Pen");
+const readyGods = q => GOD_KEYS.filter(k => S.favor[k] >= 3 && !q.used.includes(k));
+const curNode = () => QUESTS[S.q.id].nodes[S.q.node];
+
+function doRoll(i, reroll){
+  const q = S.q, c = curNode().choices[i];
+  const blessedBy = reroll ? null : q.bless;
+  const r1 = d(20), r2 = blessedBy ? d(20) : null;
+  const r = r2 ? Math.max(r1, r2) : r1;
+  const mod = S.hero[c.stat] - statPen(q, c.stat);
+  const tot = r + mod;
+  const ok = r === 20 || (r !== 1 && tot >= c.dc);
+  if (blessedBy){ q.used.push(blessedBy); q.bless = null; }
+  q.result = {i, r1, r2, r, mod, tot, ok, dc:c.dc, stat:c.stat, blessedBy, fresh:true, rerolled:!!reroll};
+  q.phase = "result";
+}
+function buildAid(){
+  const q = S.q, h = S.hero; q.aid = [];
+  const b = {hp:0, atk:0, aegis:0, fury:0, stun:false, revive:false};
+  const A = {
+    zeus:()=>{ b.hp += 8; }, poseidon:()=>{ b.hp += 6; b.stun = true; }, athena:()=>{ b.aegis += 2; },
+    artemis:()=>{ b.hp += 6; }, ares:()=>{ b.fury += 2; }, hades:()=>{ b.revive = true; },
+    hermes:()=>{ h.ambrosia = Math.min(3, h.ambrosia + 2); }, apollo:()=>{ h.hp = h.maxHp + 6; },
+    hephaestus:()=>{ b.aegis += 1; b.fury += 1; }, aphrodite:()=>{ b.atk += 2; }
+  };
+  GOD_KEYS.forEach(k => { if (S.favor[k] >= 4){ A[k](); q.aid.push(k); } });
+  q.aidBuff = b;
+}
+function victory(){
+  const q = S.q, Q = QUESTS[q.id];
+  S.hero.gold += Q.gold;
+  if (Q.final){ S.screen = "ending"; }
+  else if (Q.legend){ (q.aid||[]).forEach(k => S.favor[k] = clamp(S.favor[k]+1, 0, 5)); q.phase = "legendwin"; }
+  else q.phase = "dedicate";
+}
+function log(t, k){ S.q.log.unshift({t, k}); S.q.log = S.q.log.slice(0, 9); }
+function heroAC(q){ return S.hero.ac + (S.hero.shield ? 1 : 0) + q.aegis - pen(q, "acPen"); }
+function hurtFoe(n){ const b = S.q.boss; b.hp = Math.max(0, b.hp - n); S.q.flash = "foe"; }
+
+function attack(kind){
+  const q = S.q, h = S.hero, b = q.boss;
+  if (b.hp <= 0) return;
+  const spec = {
+    strike:{stat:"might", die:8, bonus:h.might + 1 + (h.spear?2:0) + q.fury, name:"Strike"},
+    shoot: {stat:"grace", die:6, bonus:h.grace + 1 + q.fury, name:"Shoot"},
+    trick: {stat:"wit",   die:4, bonus:h.wit, name:"Trick"}
+  }[kind];
+  const r = d(20);
+  const mod = h[spec.stat] - pen(q,"atkPen") - statPen(q, spec.stat);
+  const tot = r + mod;
+  const hit = r === 20 || (r !== 1 && tot >= b.ac);
+  const head = `${spec.name}: you roll ${r} ${sgn(mod)} = ${tot} vs Armor ${b.ac}.`;
+  if (!hit){ log(`${head} Miss!`, "sys"); return; }
+  let dmg = roll(1, spec.die) + spec.bonus;
+  if (r === 20) dmg += roll(1, spec.die);
+  dmg = Math.max(1, dmg);
+  hurtFoe(dmg);
+  let tail = `${r===20?"Critical hit! ":"Hit! "}${dmg} damage.`;
+  if (kind === "trick"){
+    if (!q.stunCd){ q.stun = true; tail += ` ${cap(b.ref)} is confused and will lose its next turn.`; }
+    else tail += ` (${cap(b.ref)} is too alert to be fooled twice in a row.)`;
+  }
+  log(`${head} ${tail}`, "you");
+}
+const POWERS = {
+  zeus:   q => { const n = roll(3,6); hurtFoe(n); return `Zeus hurls a thunderbolt! ${n} damage.`; },
+  poseidon:q => { const n = roll(2,6); hurtFoe(n); q.stun = true; return `A tidal wave crashes down for ${n} damage. ${cap(q.boss.ref)} is knocked flat!`; },
+  athena: q => { q.aegis += 3; return `Athena's Aegis shimmers around you: +3 Armor for this fight.`; },
+  artemis:q => { const n = roll(2,8)+2; hurtFoe(n); return `A silver arrow flies true: ${n} damage.`; },
+  ares:   q => { q.fury += 3; return `Battle Fury fills you! +3 damage on your attacks.`; },
+  hades:  q => { const n = roll(2,6); hurtFoe(n); S.hero.hp = Math.min(Math.max(S.hero.maxHp, S.hero.hp), S.hero.hp + n); return `Shadows drain ${n} life from ${q.boss.ref} into you.`; },
+  hermes: q => { log("Hermes lends you his speed. You strike twice!", "god"); attack("strike"); attack("strike"); return null; },
+  apollo: q => { const n = roll(2,8)+4; S.hero.hp = Math.min(Math.max(S.hero.maxHp, S.hero.hp), S.hero.hp + n); return `Warm sunlight pours down. You heal ${n} HP.`; },
+  hephaestus:q => { const n = roll(2,6); hurtFoe(n); q.boss.ac -= 2; q.burned = true; return `Molten fire from the forge: ${n} damage, and ${q.boss.ref}'s Armor melts to ${q.boss.ac}.${q.boss.regen?' The burned wounds can no longer grow back!':''}`; },
+  aphrodite:q => { q.stun = true; q.boss.atk -= 2; return `${cap(q.boss.ref)} is charmed! It loses its next turn and its attack drops by 2.`; }
+};
+function foeTurn(){
+  const q = S.q, h = S.hero, b = q.boss;
+  if (b.hp <= 0) return;
+  q.turn = (q.turn||0) + 1;
+  if (b.regen && !q.burned && !hasFlag(b.regenOff) && b.hp < b.maxHp){
+    const g = Math.min(b.regen, b.maxHp - b.hp); b.hp += g;
+    log(b.regenText ? `${b.regenText} +${g} HP.` : `Two new heads sprout! ${cap(b.ref)} regrows ${g} HP.`, "foe");
+  }
+  if (b.enrage && !b.enraged && !hasFlag(b.enrage.off) && b.hp <= b.maxHp/2){
+    b.enraged = true; b.atk += b.enrage.atk;
+    log(`${cap(b.ref)} is badly hurt and flies into a RAGE! Attack +${b.enrage.atk}.`, "foe");
+  }
+  if (q.stun){ q.stun = false; q.stunCd = true; log(`${cap(b.ref)} is dazed and loses its turn.`, "sys"); return; }
+  q.stunCd = false;
+  if (b.breath && !hasFlag(b.breath.off) && q.turn % b.breath.every === 0){
+    const dmg = roll(b.breath.dmg[0], b.breath.dmg[1]) + b.breath.dmg[2];
+    h.hp = Math.max(0, h.hp - dmg); q.flash = q.flash === "foe" ? "both" : "you";
+    log(`${cap(b.ref)} ${b.breath.name}! It can't be dodged. You take ${dmg} damage.`, "foe");
+    if (h.hp <= 0){
+      if (q.revive){ q.revive = false; h.hp = Math.ceil(h.maxHp/2); log("Hades will not let you fall today! You rise again with half your HP.", "god"); }
+      else q.phase = "defeat";
+    }
+    return;
+  }
+  const r = d(20), tot = r + b.atk, ac = heroAC(q);
+  const head = `${cap(b.ref)} attacks: ${r} ${sgn(b.atk)} = ${tot} vs your Armor ${ac}.`;
+  if (r === 20 || (r !== 1 && tot >= ac)){
+    let dmg = roll(b.dmg[0], b.dmg[1]) + b.dmg[2];
+    if (r === 20) dmg += roll(b.dmg[0], b.dmg[1]);
+    dmg = Math.max(1, dmg);
+    h.hp = Math.max(0, h.hp - dmg); q.flash = q.flash === "foe" ? "both" : "you";
+    log(`${head} Hit! You take ${dmg} damage.`, "foe");
+  } else log(`${head} Miss!`, "sys");
+  if (h.hp <= 0){
+    if (q.revive){ q.revive = false; h.hp = Math.ceil(h.maxHp/2); log("Hades will not let you fall today! You rise again with half your HP.", "god"); }
+    else q.phase = "defeat";
+  }
+}
+function combatTurn(fn){
+  const q = S.q; q.flash = null;
+  fn();
+  if (q.boss.hp <= 0){
+    const n = curNode();
+    if (n.boss) victory();
+    else { q.wonInfo = {name:q.boss.name, win:n.win}; applyOutcome(n.win); q.phase = "won"; }
+  } else foeTurn();
+  save(); render();
+}
+
+/* ---------- actions ---------- */
+const ACT = {
+  pickHero: k => { UI.hero = k; render(); },
+  start: () => { const n = (document.getElementById("heroName").value || "").trim().slice(0,20); newGame(UI.hero, n); render(); cloudSave(false); },
+  cont: () => { S = UI.saved; setSaveMsg(Cloud.ref ? `Loaded · Day ${S.day}` : ""); render(); },
+  saveGame: () => cloudSave(true),
+  reset: () => { if (!UI.confirmReset){ UI.confirmReset = true; render(); return; } UI.confirmReset = false; wipe(); S = null; UI.saved = null; render(); },
+  cancelReset: () => { UI.confirmReset = false; render(); },
+  dismiss: () => { S.notes = []; save(); render(); },
+  offer: k => {
+    if (S.offered || S.hero.gold < 10 || S.favor[k] >= 5) return;
+    S.hero.gold -= 10; S.favor[k]++; S.offered = true;
+    S.notes = [{calm:true, t:`You burn sweet incense at the temple of ${GODS[k].name}. Favor rises to ${S.favor[k]}.`}];
+    save(); render();
+  },
+  buy: k => {
+    const it = MARKET.find(m => m.k === k), h = S.hero;
+    if (h.gold < it.price) return;
+    if (k === "ambrosia"){ if (h.ambrosia >= 3) return; h.ambrosia++; }
+    else { if (h[k]) return; h[k] = true; }
+    h.gold -= it.price; save(); render();
+  },
+  quest: id => startQuest(id),
+  bless: k => { S.q.bless = S.q.bless === k ? null : k; save(); render(); },
+  choose: i => {
+    const q = S.q, c = curNode().choices[+i];
+    if (c.free){
+      if (c.cost && S.hero.gold < c.cost) return;
+      q.result = {i:+i, ok:true, free:true}; q.phase = "result";
+    } else doRoll(+i, false);
+    save(); render();
+  },
+  charm: () => { const q = S.q; q.charmUsed = true; doRoll(q.result.i, true); save(); render(); },
+  next: () => {
+    const q = S.q, n = curNode(), c = n.choices[q.result.i];
+    const o = q.result.ok ? c.ok : c.fail;
+    applyOutcome(o);
+    q.result = null;
+    goTo(o.go || n.next);
+    save(); render(); window.scrollTo(0,0);
+  },
+  onward: () => { const q = S.q, n = curNode(); q.wonInfo = null; goTo(n.next); save(); render(); window.scrollTo(0,0); },
+  fight: () => { goTo(curNode().next); save(); render(); },
+  atk: k => combatTurn(() => attack(k)),
+  power: k => combatTurn(() => { S.q.used.push(k); const t = POWERS[k](S.q); if (t) log(t, "god"); }),
+  potion: () => {
+    if (S.hero.ambrosia < 1 || S.hero.hp >= S.hero.maxHp) return;
+    combatTurn(() => { S.hero.ambrosia--; const n = roll(2,6)+3; S.hero.hp = Math.min(S.hero.maxHp, S.hero.hp + n); log(`You eat ambrosia and heal ${n} HP.`, "you"); });
+  },
+  dedicate: k => {
+    const q = S.q, Q = QUESTS[q.id], other = Q.gods.find(g => g !== k);
+    S.favor[k] = clamp(S.favor[k] + 2, 0, 5);
+    S.favor[other] = clamp(S.favor[other] - 1, 0, 5);
+    q.dedicated = k; q.phase = "grow"; save(); render(); window.scrollTo(0,0);
+  },
+  grow: k => {
+    const h = S.hero, q = S.q, Q = QUESTS[q.id];
+    if (k === "hp"){ h.maxHp += 4; } else { if (h[k] >= 5) return; h[k]++; }
+    S.done.push(q.id);
+    let msg;
+    if (Q.legend){
+      S.seg++;
+      msg = `All of Greece celebrates your victory over ${Q.title.replace(/^The /,"the ")}! ${seg().name} begins. ${cap(seg().foe)} will come on day ${seg().end}.`;
+      newDay([{calm:true, t: msg}], 1);
+    } else {
+      msg = `After ${qDays(q.id)} days on the road, you return to Delphi as the hero who conquered ${Q.title.replace(/^The /,"the ")}.`;
+      newDay([{calm:true, t: msg}], qDays(q.id));
+    }
+    render(); window.scrollTo(0,0);
+  },
+  train: st => {
+    if (legendDue() || S.hero[st] >= 5) return;
+    const m = trainStat(st, 1);
+    newDay([{calm:true, t: m.length ? `A day at the gymnasium. ${m.join(" ")}` : `A day of hard training. ${STAT[st]} training: ${S.train[st]} of 3.`}], 1);
+    render(); window.scrollTo(0,0);
+  },
+  work: () => {
+    if (legendDue()) return;
+    const h = S.hero, st = ["might","wit","grace"].sort((a,b)=>h[b]-h[a])[0];
+    const g = 6 + 2*h[st] + d(4); h.gold += g;
+    const job = {might:"carrying cargo at the harbor", wit:"copying scrolls for the library", grace:"running messages across the city"}[st];
+    newDay([{calm:true, t:`You spend the day ${job} and earn ${g} drachmae.`}], 1);
+    render(); window.scrollTo(0,0);
+  },
+  pilgrim: () => {
+    if (legendDue()) return;
+    const k = (document.getElementById("pilgrimGod")||{}).value;
+    if (!GODS[k] || S.favor[k] >= 5) return;
+    S.favor[k]++;
+    newDay([{calm:true, t:`You walk all day to the temple of ${GODS[k].name} and pray. Favor rises to ${S.favor[k]}.`}], 1);
+    render(); window.scrollTo(0,0);
+  },
+  explore: () => {
+    if (legendDue()) return;
+    let pool = Object.keys(ENCOUNTERS).filter(k => !S.encSeen.includes(k));
+    if (!pool.length){ S.encSeen = []; pool = Object.keys(ENCOUNTERS); }
+    const id = pool[Math.floor(Math.random()*pool.length)];
+    S.encSeen.push(id);
+    S.ev = {id, kind:"enc", res:null}; S.screen = "event"; S.notes = [];
+    save(); render(); window.scrollTo(0,0);
+  },
+  toGrow: () => { S.q.phase = "grow"; save(); render(); window.scrollTo(0,0); },
+  evChoose: i => {
+    const enc = S.ev.kind === "enc", e = (enc ? ENCOUNTERS : EVENTS)[S.ev.id], c = e.choices[+i];
+    if (c.cost && S.hero.gold < c.cost) return;
+    S.trainMsgs = [];
+    let out = c;
+    if (c.stat){
+      const r = d(20), tot = r + S.hero[c.stat], ok = r === 20 || (r !== 1 && tot >= c.dc);
+      S.ev.roll = {r, mod:S.hero[c.stat], tot, dc:c.dc, stat:c.stat, ok};
+      out = ok ? c.ok : c.fail;
+    }
+    applyFx(out.fx); if (c.setG) S.flags[c.setG] = true;
+    S.ev.res = +i; S.ev.out = {t:out.t, fx:out.fx, msgs:S.trainMsgs}; save(); render();
+  },
+  evDone: () => {
+    if (S.ev.kind === "enc"){
+      const e = ENCOUNTERS[S.ev.id];
+      newDay([{calm:true, t:`A day on the road: ${e.title}.${S.ev.out.msgs.length ? " " + S.ev.out.msgs.join(" ") : ""}`}], 1);
+    } else { S.flags[S.ev.id] = true; S.ev = null; S.screen = "hub"; save(); }
+    render(); window.scrollTo(0,0);
+  },
+  retreat: () => {
+    const q = S.q, Q = QUESTS[q.id];
+    if (Q.legend || Q.final){
+      S.losses = S.losses || {}; S.losses[q.id] = (S.losses[q.id]||0) + 1;
+      newDay([{t:`Hermes carries you back to Delphi. ${Q.final ? "Typhon still rages on Olympus" : cap(seg().foe) + " is still out there"}. Rest and try again tomorrow. It's still hurt from your fight, so it will be weaker next time.`}], 1);
+    } else {
+      const lost = Math.floor(S.hero.gold/2); S.hero.gold -= lost;
+      const p = Q.gods[0]; S.favor[p] = Math.max(0, S.favor[p]-1);
+      newDay([{t:`You wake up in Delphi, bruised but alive. You lost ${lost} drachmae, and ${GODS[p].name} is disappointed (−1 favor). You can try ${Q.title} again another day.`}], qDays(q.id));
+    }
+    render(); window.scrollTo(0,0);
+  },
+  restart: () => { wipe(); S = null; UI.saved = null; render(); window.scrollTo(0,0); }
+};
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-act]");
+  if (!b || b.disabled) return;
+  ACT[b.dataset.act](b.dataset.arg);
+});
+
+/* ---------- views ---------- */
+function topbar(){
+  const right = S ? `<span class="daychip">Day ${Math.min(S.day,TOTAL_DAYS)} of ${TOTAL_DAYS}</span>
+    ${UI.confirmReset
+      ? `<button class="btn small" data-act="reset">Yes, start over</button><button class="btn small ghost" data-act="cancelReset">Keep playing</button>`
+      : `<button class="btn small ghost" data-act="reset">New game</button>`}` : "";
+  return `<div class="topbar"><span class="brand">Favor of Olympus</span><div class="right">${right}</div></div><div class="meander"></div>`;
+}
+function hpBar(hp, max, foe){
+  const pct = clamp(hp/max*100, 0, 100);
+  return `<div class="bar ${foe?"foe":""} ${!foe&&pct<35?"low":""}"><i style="width:${pct}%"></i></div>`;
+}
+function heroStrip(){
+  const h = S.hero, q = S.q && S.screen === "quest" ? S.q : null;
+  const ac = q ? heroAC(q) : h.ac + (h.shield?1:0);
+  return `<div class="hero-strip">
+    <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+      <div class="label">${esc(h.cls)}</div>
+      <div class="hero-name">${esc(h.name)}</div>
+      ${hpBar(h.hp, h.maxHp)}
+      <div class="hpnum">${h.hp} / ${h.maxHp} HP</div>
+    </div>
+    <div>
+      <div class="stats">
+        <div class="stat"><b>${h.might}</b><span>Might</span></div>
+        <div class="stat"><b>${h.wit}</b><span>Wit</span></div>
+        <div class="stat"><b>${h.grace}</b><span>Grace</span></div>
+        <div class="stat"><b>${ac}</b><span>Armor</span></div>
+        <div class="stat gold"><b>${h.gold}</b><span>Drachmae</span></div>
+      </div>
+      <div class="gear">
+        <span class="tag ${h.ambrosia?"on":""}">Ambrosia ×${h.ambrosia}</span>
+        ${h.shield?'<span class="tag on">Bronze Shield</span>':''}
+        ${h.spear?'<span class="tag on">Spear of Corinth</span>':''}
+        ${h.charm?'<span class="tag on">Olive Charm</span>':''}
+      </div>
+    </div>
+  </div>`;
+}
+function mood(f){
+  if (f===0) return ['hot',"Wrathful! Strikes before your next quest"];
+  if (f===1) return ['',"Cold toward you"];
+  if (f===2) return ['',"Watching you"];
+  if (f===3) return ['good',"Pleased: power ready"];
+  if (f===4) return ['good',"Devoted: fights Typhon with you"];
+  return ['good',"Champion! Fully devoted"];
+}
+function pips(f){ return `<div class="pips" aria-label="${f} of 5 favor">${[1,2,3,4,5].map(i=>`<span class="pip ${i<=f?"on":""}"></span>`).join("")}</div>`; }
+function godTile(k){
+  const g = GODS[k], f = S.favor[k], [mc, mt] = mood(f);
+  const canOffer = !S.offered && S.hero.gold >= 10 && f < 5;
+  return `<div class="god ${f>=3?"ready":""} ${f===0?"wrath":""}" ${gstyle(k)}>
+    <div class="god-head"><div class="god-icon">${ICON[k]}</div>
+      <div><div class="god-name">${g.name}</div><div class="god-title">${g.title}</div></div></div>
+    ${pips(f)}
+    <div class="mood ${mc}">${mt}</div>
+    <div class="power"><b>${g.power}</b> ${f>=3?"":"(unlocks at 3)"}<br>${g.pdesc}</div>
+    <button class="btn small" data-act="offer" data-arg="${k}" ${canOffer?"":"disabled"}>Offer 10 drachmae</button>
+  </div>`;
+}
+function stars(n){ return "★".repeat(n) + `<span style="opacity:.3">${"★".repeat(3-n)}</span>`; }
+function foesOf(Q){ return Object.values(Q.nodes).filter(n=>n.fight).map(n=>n.fight.name); }
+function allyLine(){
+  const allies = GOD_KEYS.filter(k=>S.favor[k]>=4).map(k=>GODS[k].name);
+  return `<p class="muted">Gods with 4+ favor will join this battle: <b style="color:var(--gold)">${allies.join(", ") || "none yet"}</b>.</p>`;
+}
+function traits(f){
+  const t = [];
+  if (f.regen) t.push(`Heals ${f.regen} HP every turn`);
+  if (f.breath) t.push(`Unstoppable attack every ${f.breath.every} turns`);
+  if (f.enrage) t.push("Rages when badly hurt");
+  return t;
+}
+function questCard(id){
+  const Q = QUESTS[id];
+  if (Q.legend){
+    const foes = foesOf(Q), bf = Q.nodes.b.fight;
+    return `<div class="qcard final">
+    <div class="qmeta"><span class="label">Legendary battle · ${Q.place}</span><span class="stars">${stars(3)}</span></div>
+    <h3>${Q.title}</h3><p>${Q.intro}</p>
+    <p class="foes">Mini-boss: ${foes[0]} · Legendary boss: ${foes[foes.length-1]}</p>
+    <p class="threat">Boss strength: HP ${bf.hp} · Armor ${bf.ac} · Attack +${bf.atk} · Damage ${bf.dmg[0]}d${bf.dmg[1]}+${bf.dmg[2]}</p>
+    <div class="gear">${traits(bf).map(t=>`<span class="tag danger">${t}</span>`).join("")}</div>
+    ${allyLine()}
+    <p class="muted">Reward: ${Q.gold} drachmae, and every god who helps you gains 1 favor.</p>
+    <div><button class="btn primary" data-act="quest" data-arg="${id}">Face the legend</button></div></div>`;
+  }
+  if (Q.final){
+    const allies = GOD_KEYS.filter(k=>S.favor[k]>=4).map(k=>GODS[k].name);
+    return `<div class="qcard final">
+    <div class="qmeta"><span class="label">${Q.place}</span><span class="stars">${stars(3)}</span></div>
+    <h3>${Q.title}</h3><p>${Q.intro}</p>
+    <p class="foes">Enemies: Eris, then Typhon</p>
+    <p class="threat">Typhon's strength: HP ${QUESTS.olympus.nodes.b.fight.hp} · Armor ${QUESTS.olympus.nodes.b.fight.ac} · Attack +${QUESTS.olympus.nodes.b.fight.atk} · Damage 2d8+2</p>
+    <div class="gear">${traits(QUESTS.olympus.nodes.b.fight).map(t=>`<span class="tag danger">${t}</span>`).join("")}</div>
+    ${allyLine()}
+    <div><button class="btn primary" data-act="quest" data-arg="${id}">Climb Mount Olympus</button></div></div>`;
+  }
+  const [a,b] = Q.gods; const foes = foesOf(Q);
+  return `<div class="qcard">
+    <div class="qmeta"><span class="label">${Q.place}</span><span class="stars" title="Difficulty">${stars(Q.tier)}</span></div>
+    <h3>${Q.title}</h3>
+    <p>${Q.intro}</p>
+    <p class="foes">Mini-boss: ${foes[0]} · Boss: ${foes[foes.length-1]}</p>
+    <div class="rivals">Trophy wanted by
+      <span class="mini" ${gstyle(a)}>${ICON[a]} ${GODS[a].name}</span> and
+      <span class="mini" ${gstyle(b)}>${ICON[b]} ${GODS[b].name}</span> · ${Q.gold} drachmae</div>
+    ${dayButton(id, "Begin quest")}
+  </div>`;
+}
+function dayButton(id, label){
+  const n = qDays(id), back = S.day + n, ok = back <= seg().end;
+  return `<div class="qfoot"><button class="btn primary" data-act="quest" data-arg="${id}" ${ok?"":"disabled"}>${label}</button>
+    <span class="days ${ok?"":"late"}">${ok ? `Takes ${n} days · back on day ${back}` : `Takes ${n} days. Not enough time before ${seg().foe} arrives.`}</span></div>`;
+}
+function marketView(){
+  const h = S.hero;
+  return `<div class="market">${MARKET.map(m => {
+    const owned = m.k==="ambrosia" ? h.ambrosia>=3 : h[m.k];
+    const dis = owned || h.gold < m.price;
+    return `<div class="item"><div class="item-top"><b>${m.name}</b><span class="price">${m.price} dr</span></div>
+      <small class="muted">${m.desc}</small>
+      <div><button class="btn small" data-act="buy" data-arg="${m.k}" ${dis?"disabled":""}>${owned?(m.k==="ambrosia"?"Full":"Owned"):"Buy"}</button></div></div>`;
+  }).join("")}</div>`;
+}
+function curseText(c){ return Object.keys(CURSE_TXT).filter(f=>c[f]).map(f=>CURSE_TXT[f](c[f])).join(", "); }
+function calendar(){
+  const G = seg(), cells = [];
+  for (let dd = G.start; dd <= G.end; dd++){
+    const cls = dd < S.day ? "past" : dd === S.day ? "today" : "";
+    cells.push(`<i class="${cls} ${dd===G.end?"boss":""}" title="Day ${dd}">${dd===G.end?"!":""}</i>`);
+  }
+  const left = daysLeft();
+  const parts = SEGS.map((g,i)=>{ const f = QUESTS[g.legend].nodes.b.fight; return `<span class="${i===S.seg?"on":i<S.seg?"done":""}">${cap(g.foe)} · day ${g.end} · ${f.hp} HP</span>`; }).join(`<span class="arrow">stronger →</span>`);
+  return `<section class="calendar">
+    <div class="cal-top"><div><span class="label">${G.name}</span>
+      <div class="cal-day">Day ${Math.min(S.day,TOTAL_DAYS)} <span class="muted">of ${TOTAL_DAYS}</span></div></div>
+      <div class="cal-boss ${left<=3?"soon":""}">${left<=0 ? `${cap(G.foe)} is here!` : `${cap(G.foe)} arrives in <b>${left}</b> day${left>1?"s":""} (day ${G.end})`}</div></div>
+    <div class="cells">${cells.join("")}</div>
+    <div class="parts">${parts}</div>
+  </section>`;
+}
+function activities(){
+  const due = legendDue(), h = S.hero;
+  const best = ["might","wit","grace"].sort((a,b)=>h[b]-h[a])[0];
+  const tr = st => `<button class="btn small" data-act="train" data-arg="${st}" ${due||h[st]>=5?"disabled":""}>${STAT[st]} <span class="tp">${"●".repeat(S.train[st])}${"○".repeat(3-S.train[st])}</span></button>`;
+  return `<section class="panel">
+    <div class="section-title"><h2>Other ways to spend a day</h2><span class="muted">Each takes 1 day</span></div>
+    ${due?`<p class="muted" style="margin-bottom:10px">No time for this today. The legend is here!</p>`:""}
+    <div class="market">
+      <div class="item"><b>Train at the gymnasium</b><small class="muted">Every 3 days of training raises a stat by 1.</small>
+        <div class="trainrow">${tr("might")}${tr("wit")}${tr("grace")}</div></div>
+      <div class="item"><b>Work in the Agora</b><small class="muted">Earn about ${6+2*h[best]+2} drachmae with your best skill (${STAT[best]}).</small>
+        <div><button class="btn small" data-act="work" ${due?"disabled":""}>Work for a day</button></div></div>
+      <div class="item"><b>Pilgrimage</b><small class="muted">Walk to a god's temple and pray: +1 favor, free.</small>
+        <div class="trainrow"><select id="pilgrimGod" aria-label="Choose a god">${GOD_KEYS.filter(k=>S.favor[k]<5).map(k=>`<option value="${k}">${GODS[k].name} (${S.favor[k]})</option>`).join("")}</select>
+        <button class="btn small" data-act="pilgrim" ${due?"disabled":""}>Go</button></div></div>
+      <div class="item"><b>Explore Greece</b><small class="muted">Wander the roads and see who you meet. Anything can happen.</small>
+        <div><button class="btn small" data-act="explore" ${due?"disabled":""}>Set out</button></div></div>
+    </div>
+  </section>`;
+}
+function hubView(){
+  const notes = S.notes.length ? `<div class="note ${S.notes.every(n=>n.calm)?"calm":""}">
+      ${S.notes.map(n=>`<p>${esc(n.t)}</p>`).join("")}
+      <div><button class="btn small" data-act="dismiss">Got it</button></div></div>` : "";
+  const curse = S.curse ? `<div class="note"><p><b>Curses on your next quest:</b> ${curseText(S.curse)}.</p></div>` : "";
+  const known = [S.flags.spied?"You know the golden apple is the source of Eris's power.":"",
+    S.flags.refused?"You refused to judge the apple. Zeus remembers.":"",
+    S.flags.judged?"You judged the apple. The goddesses' quarrel made Eris stronger.":"",
+    S.flags.echidnaKnows?"Echidna knows Eris tricked her. She may help you against Typhon.":"",
+    S.flags.prometheus?"Prometheus's sacred fire protects you from Typhon's flames.":"",
+    S.flags.listened?"Prometheus told you about the scar on Typhon's chest.":""].filter(Boolean);
+  return `${topbar()}
+  ${calendar()}
+  ${heroStrip()}${notes}${curse}
+  ${known.length?`<div class="lore">${known.map(t=>`<p>${t}</p>`).join("")}</div>`:""}
+  <div class="hub">
+    <div class="col">
+      <section class="panel">
+        <div class="section-title"><h2>${legendDue()?"Today's battle":"Quests"}</h2><span class="muted">${S.done.filter(id=>!QUESTS[id].legend).length} quests completed</span></div>
+        <div class="quests">${S.board.length ? S.board.map(questCard).join("") : `<p class="muted">You've finished every quest in this part of the story. Train, work, or explore until ${seg().foe} arrives.</p>`}</div>
+      </section>
+      ${activities()}
+    </div>
+    <div class="col">
+      <section class="panel">
+        <div class="section-title"><h2>The Pantheon</h2><span class="muted">${S.offered?"You've made today's offering":"One offering per day, doesn't use up the day"}</span></div>
+        <div class="gods">${GOD_KEYS.map(godTile).join("")}</div>
+      </section>
+      <section class="panel">
+        <div class="section-title"><h2>Agora of Delphi</h2><span class="muted">Shopping doesn't use up the day</span></div>
+        ${marketView()}
+      </section>
+    </div>
+  </div>
+  <details class="rules"><summary>How to play</summary><ul>
+    <li><b>You have ${TOTAL_DAYS} days in three parts.</b> The Hydra attacks on day 15, the Chimera on day 30, and Eris and Typhon on day 45. When the day comes, you must fight.</li>
+    <li><b>Spend each day wisely.</b> Quests take 2 or 3 days. Training, working, pilgrimages and exploring take 1 day. Shopping and temple offerings are free.</li>
+    <li><b>Quests</b> have a mini-boss and a boss. Your HP does not refill between them. You heal fully back in Delphi.</li>
+    <li><b>Choices need a roll:</b> roll a 20-sided die and add your Might, Wit or Grace. Meet the DC (difficulty) to succeed. A natural 20 always works!</li>
+    <li><b>Choices matter later.</b> Something you find or someone you help can unlock a special option further on.</li>
+    <li><b>Win a quest,</b> then dedicate your trophy to one of two gods: +2 favor for one, −1 for the other. Then you grow stronger.</li>
+    <li><b>Favor 3+:</b> that god's power is ready once per quest. <b>4+:</b> that god fights beside you in legendary battles. <b>0:</b> wrath!</li>
+    <li><b>Lose a legendary battle?</b> No penalty, but it costs a day. Try again tomorrow.</li>
+  </ul></details>`;
+}
+function eventView(){
+  const enc = S.ev.kind === "enc", e = (enc ? ENCOUNTERS : EVENTS)[S.ev.id], res = S.ev.res;
+  let body;
+  if (res === null || res === undefined){
+    body = `<div class="choices">${e.choices.map((c,i)=>{
+      if (c.need && !hasFlag(c.need)) return "";
+      const dis = c.cost && S.hero.gold < c.cost;
+      const chip = c.stat ? `<span class="check ${c.stat}">${STAT[c.stat]} · DC ${c.dc}</span>` : `<span class="check free">Choose</span>`;
+      return `<button class="choice" data-act="evChoose" data-arg="${i}" ${dis?"disabled":""}><span class="ctext">${c.label}</span>${chip}</button>`;
+    }).join("")}</div>`;
+  } else {
+    const c = e.choices[res], o = S.ev.out, r = S.ev.roll;
+    body = `<p class="label">You chose: ${c.label}</p>
+      ${c.stat && r ? `<p class="math">You roll ${r.r} ${sgn(r.mod)} ${STAT[r.stat]} = <b>${r.tot}</b> vs DC ${r.dc} · <span class="verdict ${r.ok?"ok":"bad"}" style="font-size:1.1rem">${r.ok?"Success!":"Not this time."}</span></p>`:""}
+      <p class="story">${o.t}</p>${fxChips(o.fx, "", (o.msgs||[]).join(" "))}
+      ${enc ? "" : `<p class="muted">This choice will matter on Olympus.</p>`}
+      <div class="actions"><button class="btn primary" data-act="evDone">${enc ? "End the day" : "Continue"}</button></div>`;
+  }
+  return `${topbar()}${calendar()}${heroStrip()}
+  <div class="stage">
+    <div class="qhead"><span class="label">${enc ? `Day ${S.day} · On the road` : "A story event"}</span><h2>${e.title}</h2></div>
+    <p class="story">${e.t}</p>${body}
+  </div>`;
+}
+function stepper(q){
+  const n = QUESTS[q.id].len;
+  return `<div class="step">${Array.from({length:n},(_,i)=>`<i class="${i<q.step?"on":""}"></i>`).join("")}</div>`;
+}
+function qhead(q){ const Q = QUESTS[q.id]; return `<div class="qhead"><span class="label">${Q.place}</span><h2>${Q.title}</h2>${stepper(q)}</div>`; }
+function sceneView(){
+  const q = S.q, Q = QUESTS[q.id], n = curNode();
+  const ready = readyGods(q);
+  const bless = ready.length ? `<div class="bless">Ask a god for help on this roll (roll twice, keep the higher):
+      ${ready.map(k=>`<button class="blesschip ${q.bless===k?"sel":""}" ${gstyle(k)} data-act="bless" data-arg="${k}" aria-pressed="${q.bless===k}">${ICON[k]} ${GODS[k].name}</button>`).join("")}</div>` : "";
+  const list = n.choices.map((c,i)=>({c,i})).filter(({c}) => !c.need || hasFlag(c.need));
+  return `<div class="stage">
+    ${qhead(q)}
+    ${q.step===1?`<p class="story intro">${Q.intro}</p>`:""}
+    <p class="story">${n.t}</p>
+    <div class="label">What do you do?</div>
+    <div class="choices">${list.map(({c,i})=>{
+      const dis = c.cost && S.hero.gold < c.cost;
+      const chip = c.free ? `<span class="check free">No roll</span>`
+        : `<span class="check ${c.stat}">${STAT[c.stat]} · DC ${c.dc}</span>`;
+      return `<button class="choice ${c.need?"unlocked":""}" data-act="choose" data-arg="${i}" ${dis?"disabled":""}>
+        <span class="ctext">${c.need?`<span class="unlock">Unlocked by an earlier choice</span>`:""}${c.label}</span>${chip}</button>`;
+    }).join("")}</div>
+    ${bless}
+  </div>`;
+}
+function resultView(){
+  const q = S.q, n = curNode(), c = n.choices[q.result.i], r = q.result;
+  const out = r.ok ? c.ok : c.fail;
+  const foe = nextFoe(q.id, out.go || n.next);
+  const canCharm = !r.ok && S.hero.charm && !q.charmUsed;
+  let rollPart = "";
+  if (!r.free){
+    const p = statPen(q, r.stat);
+    rollPart = `<div class="rollbox">
+      <div class="dice">
+        <div class="die" data-final="${r.r1}"><span>${r.r1}</span></div>
+        ${r.r2!==null?`<div class="die ${r.r2<r.r1?"dim":""}" data-final="${r.r2}"><span>${r.r2}</span></div>`:""}
+      </div>
+      <div class="reveal">
+        <div class="math">${r.r} ${sgn(r.mod)} ${STAT[r.stat]} = <b>${r.tot}</b> vs DC ${r.dc}${p?` (includes −${p} curse)`:""}${r.blessedBy?` · blessed by ${GODS[r.blessedBy].name}`:""}${r.rerolled?" · Olive Charm reroll":""}</div>
+        <div class="verdict ${r.ok?"ok":"bad"}">${r.r===20?"Natural 20! ":r.r===1?"Natural 1! ":""}${r.ok?"Success!":"Not this time."}</div>
+      </div></div>`;
+  }
+  const memo = out.set || out.setG ? "You'll remember this." : "";
+  return `<div class="stage">
+    ${qhead(q)}
+    <p class="label">You chose: ${c.label}</p>
+    ${rollPart}
+    <div class="reveal" id="outcome">
+      <p class="story">${out.t}</p>
+      ${fxChips(out.fx, foe, memo)}
+      <div class="actions">
+        <button class="btn primary" data-act="next">Continue</button>
+        ${canCharm?`<button class="btn" data-act="charm">Use Olive Charm to reroll</button>`:""}
+      </div>
+    </div>
+  </div>`;
+}
+function wonView(){
+  const q = S.q, w = q.wonInfo || {};
+  const nextName = nextFoe(q.id, curNode().next);
+  const heading = w.skipped ? `Past ${w.name}!` : `${w.name} defeated!`;
+  const text = w.skipped ? "Brains beat brawn. You slip past without a fight."
+    : (w.win ? w.win.t : "The way ahead is clear.");
+  return `<div class="stage">
+    ${qhead(q)}
+    <div class="qhead"><span class="label">${w.skipped?"No fight needed":"Mini-boss defeated"}</span><h2 style="font-size:1.6rem;color:var(--marble)">${heading}</h2></div>
+    <p class="story">${text}</p>
+    ${w.win && !w.skipped ? fxChips(w.win.fx, nextName, w.win.set?"You'll remember this.":"") : ""}
+    <p class="muted">You have ${S.hero.hp} of ${S.hero.maxHp} HP. Your HP does not refill before the next fight.</p>
+    <div class="actions"><button class="btn primary" data-act="onward">Press on</button></div>
+  </div>`;
+}
+function aidView(){
+  const q = S.q, silent = GOD_KEYS.filter(k => !q.aid.includes(k));
+  const B = nextFoe(q.id, curNode().next);
+  return `<div class="stage">
+    ${qhead(q)}
+    <div class="qhead"><h2 style="font-size:1.6rem;color:var(--marble)">The Gods Answer</h2></div>
+    <p class="story">${B} is coming. You look to the sky for help...</p>
+    ${q.aid.length ? `<div class="aidgrid">${q.aid.map(k=>`<div class="god ready" ${gstyle(k)}><div class="god-head"><div class="god-icon">${ICON[k]}</div><div class="god-name">${GODS[k].name}</div></div><p>${GODS[k].aid.replace("{B}", B)}</p></div>`).join("")}</div>`
+      : `<p class="story">No god answers. You will face ${B} with only your own courage. (Gods join you at 4+ favor.)</p>`}
+    ${silent.length && q.aid.length ? `<p class="muted">Staying on Olympus: ${silent.map(k=>GODS[k].name).join(", ")}.</p>`:""}
+    <div class="actions"><button class="btn primary" data-act="fight">Face ${B}</button></div>
+  </div>`;
+}
+function legendWinView(){
+  const q = S.q, Q = QUESTS[q.id];
+  return `<div class="stage">
+    <div class="qhead"><span class="label">Legendary victory</span><h2>${Q.nodes.b.fight.name} defeated!</h2></div>
+    <p class="story">Songs will be sung about this day. You earn <b style="color:var(--gold)">${Q.gold} drachmae</b>.</p>
+    ${q.aid && q.aid.length ? `<p class="story">The gods who fought beside you are proud:</p>${fxChips({favor:Object.fromEntries(q.aid.map(k=>[k,1]))})}` : `<p class="muted">You won without any god's help. Imagine what you could do with them!</p>`}
+    <div class="actions"><button class="btn primary" data-act="toGrow">Continue</button></div>
+  </div>`;
+}
+function bossTags(q,b){
+  const t = [];
+  if (b.regen) t.push(q.burned||hasFlag(b.regenOff) ? ["off","Healing stopped"] : ["on",`Heals ${b.regen} HP every turn`]);
+  if (b.breath) t.push(hasFlag(b.breath.off) ? ["off","Fire attack stopped"] : ["on",`Unstoppable attack in ${b.breath.every - ((q.turn||0) % b.breath.every)} turn(s)`]);
+  if (b.enrage) t.push(hasFlag(b.enrage.off) ? ["off","Calm: will not rage"] : b.enraged ? ["on","ENRAGED"] : ["on","Rages at half HP"]);
+  return t.length ? `<div class="gear">${t.map(([c,x])=>`<span class="tag ${c==="on"?"danger":"on"}">${x}</span>`).join("")}</div>` : "";
+}
+function combatView(){
+  const q = S.q, b = q.boss, h = S.hero;
+  const ready = readyGods(q);
+  const fl = q.flash; q.flash = null;
+  const ap = pen(q,"atkPen");
+  const buffs = [q.aegis?`Armor +${q.aegis}`:"", q.fury?`Damage +${q.fury}`:"", q.revive?"Hades' protection":"",
+    q.curse ? curseText(q.curse) : ""].filter(Boolean);
+  const m = s => h[s] - ap - statPen(q, s);
+  return `<div class="stage" style="max-width:900px">
+    ${qhead(q)}
+    <div class="arena">
+      <div class="panel fighter foe ${fl==="foe"||fl==="both"?"shake":""}">
+        <div class="label">${b.mini?"Mini-boss":QUESTS[q.id].legend||QUESTS[q.id].final?"Legendary boss":"Boss"}${q.stun?" · dazed":""}</div>
+        <h3>${b.name}</h3><p class="muted">${b.desc}</p>
+        ${hpBar(b.hp, b.maxHp, true)}
+        <div class="hpnum">${b.hp} / ${b.maxHp} HP · Armor ${b.ac} · Attack ${sgn(b.atk)}</div>
+        ${bossTags(q,b)}
+        ${q.wounded && !b.mini ? `<div class="gear"><span class="tag on">Still wounded from your last fight</span></div>` : ""}
+      </div>
+      <div class="panel fighter ${fl==="you"||fl==="both"?"shake":""}">
+        <div class="label">You</div>
+        <h3>${esc(h.name)}</h3>
+        ${hpBar(h.hp, h.maxHp)}
+        <div class="hpnum">${h.hp} / ${h.maxHp} HP · Armor ${heroAC(q)}</div>
+        ${buffs.length?`<div class="gear">${buffs.map(t=>`<span class="tag on">${t}</span>`).join("")}</div>`:""}
+      </div>
+    </div>
+    <div class="label">Your move</div>
+    <div class="moves">
+      <button class="move" data-act="atk" data-arg="strike"><b>Strike</b><small>Might ${sgn(m("might"))} to hit · 1d8${sgn(h.might+1+(h.spear?2:0)+q.fury)} damage</small></button>
+      <button class="move" data-act="atk" data-arg="shoot"><b>Shoot</b><small>Grace ${sgn(m("grace"))} to hit · 1d6${sgn(h.grace+1+q.fury)} damage</small></button>
+      <button class="move" data-act="atk" data-arg="trick"><b>Trick</b><small>Wit ${sgn(m("wit"))} to hit · 1d4${sgn(h.wit)} damage, enemy loses a turn</small></button>
+      <button class="move" data-act="potion" ${h.ambrosia<1||h.hp>=h.maxHp?"disabled":""}><b>Ambrosia ×${h.ambrosia}</b><small>Heal 2d6+3 HP</small></button>
+      ${ready.map(k=>`<button class="move godmove" ${gstyle(k)} data-act="power" data-arg="${k}"><b>${GODS[k].power}</b><small>${GODS[k].name}: ${GODS[k].pdesc} Once per quest.</small></button>`).join("")}
+    </div>
+    ${q.used.length?`<p class="muted" style="font-size:.88rem">Already called this quest: ${q.used.map(k=>GODS[k].name).join(", ")}</p>`:""}
+    <div class="label">Battle log</div>
+    <ul class="log">${q.log.map(l=>`<li class="${l.k}">${l.t}</li>`).join("")}</ul>
+  </div>`;
+}
+function dedicateView(){
+  const q = S.q, Q = QUESTS[q.id], foes = foesOf(Q);
+  return `<div class="stage">
+    <div class="qhead"><span class="label">Victory</span><h2>${q.lastSkipped?"Quest complete!":`${foes[foes.length-1]} defeated!`}</h2></div>
+    ${q.lastSkipped?`<p class="story">You finished without a final fight. The best heroes know when not to swing a sword.</p>`:""}
+    <p class="story">You earn <b style="color:var(--gold)">${Q.gold} drachmae</b>. Now, which god will you honor with your trophy? The one you choose gains 2 favor. The other feels left out and loses 1.</p>
+    <div class="pickrow">${Q.gods.map(k=>{
+      const other = Q.gods.find(g=>g!==k);
+      return `<button class="pick godpick" ${gstyle(k)} data-act="dedicate" data-arg="${k}">
+        <div class="god-head"><div class="god-icon">${ICON[k]}</div><h3 style="color:var(--gc)">${GODS[k].name}</h3></div>
+        <span>Favor ${S.favor[k]} → ${Math.min(5,S.favor[k]+2)} · ${GODS[other].name} ${S.favor[other]} → ${Math.max(0,S.favor[other]-1)}</span>
+        <small class="muted">${S.favor[k]<3&&S.favor[k]+2>=3?`Unlocks ${GODS[k].power}. `:""}${S.favor[k]<4&&S.favor[k]+2>=4?"Will fight Typhon with you. ":""}${S.favor[other]-1<=0?`Warning: ${GODS[other].name} will become wrathful!`:""}</small>
+      </button>`;}).join("")}</div>
+  </div>`;
+}
+function growView(){
+  const h = S.hero, q = S.q;
+  const opt = (k, title, body) => `<button class="pick" data-act="grow" data-arg="${k}" ${k!=="hp"&&h[k]>=5?"disabled":""}><h3>${title}</h3><small class="muted">${body}</small></button>`;
+  return `<div class="stage">
+    <div class="qhead"><span class="label">${q.dedicated?GODS[q.dedicated].name+" is honored":"A legend is born"}</span><h2>You grow stronger</h2></div>
+    <p class="story">Every quest changes a hero. How did this one change you?</p>
+    <div class="pickrow">
+      ${opt("might",`Might ${h.might} → ${h.might+1}`,"Hit harder, smash walls, swim rivers.")}
+      ${opt("wit",`Wit ${h.wit} → ${h.wit+1}`,"Solve riddles, spot weak points, trick monsters.")}
+      ${opt("grace",`Grace ${h.grace} → ${h.grace+1}`,"Dodge, sneak, aim, and sing.")}
+      ${opt("hp",`Max HP ${h.maxHp} → ${h.maxHp+4}`,"Take more hits before you fall.")}
+    </div>
+  </div>`;
+}
+function defeatView(){
+  const Q = QUESTS[S.q.id];
+  return `<div class="stage">
+    <div class="qhead"><span class="label">Defeat</span><h2>You have fallen</h2></div>
+    <p class="story">${cap(S.q.boss.ref)} was too strong this time. Everything goes dark, until a gentle hand lifts you up.</p>
+    <p class="muted">${Q.legend?"You'll return to Delphi with no penalty. Rest, raise your favor, and try again!":Q.final?"You'll return to Delphi with your favor and gear. Raise your favor and try again!":`You'll return to Delphi. You lose half your drachmae and ${GODS[Q.gods[0]].name} loses 1 favor, but you keep your gear and can try again.`}</p>
+    <div class="actions"><button class="btn primary" data-act="retreat">Return to Delphi</button></div>
+  </div>`;
+}
+function skySvg(seed){
+  let s = seed; const rnd = () => (s = (s*9301+49297)%233280)/233280;
+  const pts = Array.from({length:7}, (_,i) => [60 + i*65 + rnd()*30, 60 + rnd()*120]);
+  const bg = Array.from({length:50}, () => `<circle cx="${(rnd()*520).toFixed(1)}" cy="${(rnd()*240).toFixed(1)}" r="${(rnd()*1.2+.3).toFixed(2)}" fill="#f2ece0" opacity="${(rnd()*.5+.2).toFixed(2)}"/>`).join("");
+  return `<svg class="sky" viewBox="0 0 520 240" role="img" aria-label="A new constellation">
+    ${bg}<polyline points="${pts.map(p=>p.join(",")).join(" ")}" fill="none" stroke="#e3b14b" stroke-width="1.2" opacity=".7"/>
+    ${pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#ffe7a8"/>`).join("")}</svg>`;
+}
+function endingView(){
+  const h = S.hero;
+  const allies = GOD_KEYS.filter(k=>S.favor[k]>=4).map(k=>GODS[k].name);
+  const path = S.flags.refused ? "You never fell for Eris's trick, and the gods will remember that you were the wisest of them all."
+    : S.flags.judged ? "Your judgment of the apple caused a quarrel, but you fixed what you started."
+    : "";
+  return `${topbar()}<div class="stage" style="padding-top:20px">
+    <div class="qhead"><span class="label">Day ${S.day} of ${TOTAL_DAYS} · Peace on Olympus</span><h2>Champion of Olympus</h2></div>
+    <p class="story">Typhon crashes down the mountain and is buried under Mount Etna, where he still grumbles to this day. Eris's golden apple is locked away where no god can argue over it. ${path} Zeus lifts his hand and places your shape among the stars, so everyone in Greece will remember the name ${esc(h.name)}.</p>
+    ${skySvg(h.name.length*97 + S.day*13)}
+    <p class="muted">${allies.length?`Fighting beside you at the end: ${allies.join(", ")}.`:"You beat Typhon with no god at your side. That has never happened before."}</p>
+    <div class="gods">${GOD_KEYS.map(k=>`<div class="god" ${gstyle(k)}><div class="god-head"><div class="god-icon">${ICON[k]}</div><div class="god-name">${GODS[k].name}</div></div>${pips(S.favor[k])}</div>`).join("")}</div>
+    <div class="center"><button class="btn primary" data-act="restart">Play again</button></div>
+  </div>`;
+}
+function titleView(){
+  const saved = UI.saved;
+  return `${topbar()}<div class="title">
+      <span class="label">A Greek myth adventure in three parts</span>
+      <h1>Favor of Olympus</h1>
+      <p>Ten gods are quarreling over a golden apple, and the monsters of Greece are waking up. You have 45 days. Win the gods' favor, take on twenty quests, stop the Hydra, the Chimera and Typhon, and become the hero who brings peace to Olympus.</p>
+      ${saved?`<button class="btn primary" data-act="cont">Continue ${esc(saved.hero.name)}'s journey (Day ${Math.min(saved.day,TOTAL_DAYS)} of ${TOTAL_DAYS})</button>`:""}
+      <p class="savenote">${Cloud.ref ? "Your game saves to your Claude account, so you can pick it up on any device." : Cloud.checked ? "Your game saves on this device." : "Checking for a saved game…"}</p>
+    </div>
+    <div class="stage" style="max-width:900px">
+      <div class="label">${saved?"Or begin a new hero":"Choose your hero"}</div>
+      <div class="pickrow">${Object.entries(HEROES).map(([k,h])=>`
+        <button class="pick ${UI.hero===k?"sel":""}" data-act="pickHero" data-arg="${k}" aria-pressed="${UI.hero===k}">
+          <div class="god-head"><div class="god-icon" ${gstyle(h.patron)}>${ICON[h.patron]}</div><div><span class="label">${h.cls}</span><h3>${h.name}</h3></div></div>
+          <small class="muted">${h.blurb}</small>
+          <small class="perk" ${gstyle(h.patron)}>${h.perk}</small>
+          <div class="statline"><span>Might <b>${h.might}</b></span><span>Wit <b>${h.wit}</b></span><span>Grace <b>${h.grace}</b></span><span>HP <b>${h.hp}</b></span><span>Armor <b>${h.ac}</b></span></div>
+        </button>`).join("")}</div>
+      <div class="field"><label class="label" for="heroName">Your hero's name</label>
+        <input id="heroName" maxlength="20" placeholder="${HEROES[UI.hero].name}" value="${esc(UI.name)}"></div>
+      <div class="center"><button class="btn primary" data-act="start">Begin the adventure</button></div>
+    </div>`;
+}
+function saveBar(){
+  return `<footer class="savebar">
+    <button class="savebtn" data-act="saveGame">Save game</button>
+    <span class="savemsg" id="saveMsg" role="status">${esc(UI.saveMsg || (Cloud.ref ? "Saves to your Claude account. Also saves automatically every day." : "Also saves automatically every day."))}</span>
+  </footer>`;
+}
+function render(){
+  const app = document.getElementById("app");
+  renderInner(app);
+  if (S) app.insertAdjacentHTML("beforeend", saveBar());
+}
+function renderInner(app){
+  const nameInput = document.getElementById("heroName");
+  if (nameInput) UI.name = nameInput.value;
+  if (!S){ app.innerHTML = titleView(); return; }
+  if (S.screen === "hub"){ app.innerHTML = hubView(); return; }
+  if (S.screen === "event"){ app.innerHTML = eventView(); return; }
+  if (S.screen === "ending"){ app.innerHTML = endingView(); return; }
+  const p = S.q.phase;
+  const body = p==="scene"?sceneView():p==="result"?resultView():p==="won"?wonView():p==="aid"?aidView():p==="combat"?combatView():p==="legendwin"?legendWinView()
+    :p==="dedicate"?dedicateView():p==="grow"?growView():defeatView();
+  app.innerHTML = topbar() + heroStrip() + body;
+  if (p==="result" && S.q.result && S.q.result.fresh && !S.q.result.free) animateDice();
+}
+function animateDice(){
+  S.q.result.fresh = false; save();
+  const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce) return;
+  const dice = [...document.querySelectorAll(".die")];
+  const outcome = document.getElementById("outcome"), verdict = document.querySelector(".rollbox .reveal");
+  outcome.style.visibility = "hidden"; if (verdict) verdict.style.visibility = "hidden";
+  dice.forEach(el => el.classList.add("spin"));
+  const t = setInterval(() => dice.forEach(el => el.querySelector("span").textContent = d(20)), 60);
+  setTimeout(() => {
+    clearInterval(t);
+    dice.forEach(el => el.querySelector("span").textContent = el.dataset.final);
+    outcome.style.visibility = ""; if (verdict) verdict.style.visibility = "";
+  }, 750);
+}
+
+UI.saved = load();
+render();
+cloudInit();
+</script>
+</body>
+</html>
